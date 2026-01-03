@@ -46,7 +46,7 @@ def start_process():
     if not articles:
         return [], "Keine News", status
 
-    # KI Zusammenfassung (Extra kurz)
+    # KI Zusammenfassung
     headlines_text = " \n".join([a['title'] for a in articles[:5]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_text}"}]}]}
@@ -67,7 +67,7 @@ def start_process():
 ticker_entries, search_status = start_process()
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML MIT ECKIGEM DESIGN & GRÖSSERER MOBIL-SCHRIFT ---
+# --- HTML MIT ANPASSUNGEN ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -82,7 +82,7 @@ html_content = f"""
         }}
         
         #podcast-news-widget {{
-            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 0px; /* ECKIG */
+            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 0px;
             background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             height: 85px; box-sizing: border-box;
         }}
@@ -110,14 +110,18 @@ html_content = f"""
         #progress-bar {{ width: 0%; height: 100%; background: rgb(255, 236, 192); }}
 
         #feed-box {{
-            padding: 6px 12px; height: 38px; display: flex; flex-direction: column;
+            padding: 4px 12px; height: 42px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
         }}
 
-        .status-tag {{ color: rgb(255, 236, 192); opacity: 0.5; font-size: 8px; text-transform: uppercase; margin-bottom: 1px; }}
+        .status-tag {{ 
+            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; /* +1px */
+            text-transform: uppercase; margin-bottom: 2px; 
+        }}
         
         .news-text {{
-            color: rgb(255, 236, 192); font-size: 11px; line-height: 1.2; margin: 0;
+            color: rgb(255, 236, 192); font-size: 13px; /* +2px */
+            line-height: 1.2; margin: 0;
             text-decoration: none; font-weight: bold; animation: fadeIn 0.5s;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block;
         }}
@@ -126,11 +130,11 @@ html_content = f"""
         @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(2px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         @keyframes progress {{ from {{ width: 0%; }} to {{ width: 100%; }} }}
 
-        /* Mobile Optimization: Schrift um 2px vergrößert */
+        /* Mobile Optimization: +2px auf die neuen Desktop-Werte */
         @media (max-width: 768px) {{
-            .news-text {{ font-size: 13px; }}
+            .news-text {{ font-size: 15px; }}
             .header-msg {{ font-size: 11px; }}
-            .status-tag {{ font-size: 9px; }}
+            .status-tag {{ font-size: 10px; }}
         }}
     </style>
 </head>
