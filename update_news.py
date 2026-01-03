@@ -59,19 +59,15 @@ def start_process():
     api_results = fetch_news_api(search_query)
     google_results = fetch_google_news(search_query)
     
-    # --- INTERLEAVING LOGIK (Mixen) ---
     combined = []
     api_idx = 0
     google_idx = 0
     
-    # Solange wir Material aus beiden Quellen haben
     while api_idx < len(api_results) or google_idx < len(google_results):
-        # 2 Meldungen aus News-API
         for _ in range(2):
             if api_idx < len(api_results):
                 combined.append(api_results[api_idx])
                 api_idx += 1
-        # 1 Meldung aus Google News
         if google_idx < len(google_results):
             combined.append(google_results[google_idx])
             google_idx += 1
@@ -82,7 +78,6 @@ def start_process():
     else:
         status_text = "Personalisiert"
 
-    # KI Zusammenfassung
     headlines_for_ai = " \n".join([a['title'] for a in combined[:8]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_for_ai}"}]}]}
@@ -94,7 +89,7 @@ def start_process():
     except: pass
 
     ticker_data = [{"title": summary, "is_ai": True}]
-    for a in combined[:20]: # Zeige bis zu 20 gemischte Einträge
+    for a in combined[:20]:
         source = a.get('source', {}).get('name', 'News')
         ticker_data.append({"title": a['title'], "url": a.get('url', '#'), "source": source})
     
@@ -103,7 +98,7 @@ def start_process():
 ticker_entries, search_status = start_process()
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML (Design bleibt 1:1 erhalten) ---
+# --- HTML GENERIERUNG ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -176,3 +171,7 @@ html_content = f"""
     </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
