@@ -19,8 +19,9 @@
 
         .ticker-header {
             background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 5px 12px;
-            font-weight: bold; font-size: 12px; display: flex; align-items: center; 
-            height: 22px; position: relative; overflow: hidden;
+            font-weight: bold; font-size: 13px; 
+            display: flex; align-items: center; 
+            height: 24px; position: relative; overflow: hidden;
         }
 
         #header-text-container { position: relative; height: 100%; width: 100%; display: flex; align-items: center; }
@@ -36,21 +37,24 @@
             margin-right: 8px; flex-shrink: 0; animation: pulse 2s infinite ease-in-out;
         }
 
-        #progress-bar-container { width: 100%; height: 2px; background: rgba(0,0,0,0.2); }
-        #progress-bar { width: 0%; height: 100%; background: rgb(255, 236, 192); }
+        #progress-bar-container { width: 100%; height: 3px; background: rgba(0,0,0,0.2); }
+        #progress-bar { 
+            width: 0%; height: 100%; 
+            background: linear-gradient(to bottom, rgb(204, 189, 154) 0%, rgb(255, 236, 192) 100%); 
+        }
 
         #feed-box {
-            padding: 4px 12px; height: 42px; display: flex; flex-direction: column;
+            padding: 4px 12px; height: 38px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
         }
 
         .status-tag { 
-            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; /* +1px */
+            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; 
             text-transform: uppercase; margin-bottom: 2px; 
         }
         
         .news-text {
-            color: rgb(255, 236, 192); font-size: 13px; /* +2px */
+            color: rgb(255, 236, 192); font-size: 13px; 
             line-height: 1.2; margin: 0;
             text-decoration: none; font-weight: bold; animation: fadeIn 0.5s;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block;
@@ -60,10 +64,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes progress { from { width: 0%; } to { width: 100%; } }
 
-        /* Mobile Optimization: +2px auf die neuen Desktop-Werte */
         @media (max-width: 768px) {
             .news-text { font-size: 15px; }
-            .header-msg { font-size: 11px; }
+            .ticker-header { font-size: 15px; height: 26px; }
+            .header-msg { font-size: 15px; }
             .status-tag { font-size: 10px; }
         }
     </style>
@@ -85,8 +89,8 @@
     </div>
 
     <script>
-        const entries = [{"title": "Aktuelle Updates aus der Medienwelt.", "is_ai": true}, {"title": "SZ-Podcast \u201eAuf den Punkt\u201c: Crans-Montana: Wieso konnten so wenige Menschen fliehen?", "url": "https://www.sueddeutsche.de/panorama/crans-montana-brand-bar-todesopfer-podcast-li.3362243", "source": "S\u00fcddeutsche Zeitung"}, {"title": "Ja, er lebt noch! Was aus dem RTL-Wald in der Eifel geworden ist", "url": "https://www.dwdl.de/magazin/104286/ja_er_lebt_noch_was_aus_dem_rtlwald_in_der_eifel_geworden_ist/", "source": "Dwdl.de"}, {"title": "Brand in Schweizer Skiort: \"Eine der schlimmsten Trag\u00f6dien\" in der Schweizer Geschichte", "url": "https://www.zeit.de/politik/2026-01/brandkatastrophe-schweiz-crans-montana-bar-silvester-nachrichtenpodcast", "source": "Die Zeit"}, {"title": "Replay: Dieser Pop-Hit klingt nach Vivaldi und mehr: Wir analysieren Rosal\u00edas \u201eBerghain\u201c", "url": "https://www.diepresse.com/20437831/replay-dieser-pop-hit-klingt-nach-vivaldi-und-mehr-wir-analysieren", "source": "Diepresse.com"}, {"title": "SZ-Podcast \u201eAuf den Punkt\u201c: 2025: Wie war Merz' erstes Kanzler-Jahr?", "url": "https://www.sueddeutsche.de/politik/merz-rueckblick-kanzler-jahr-berlin-li.3359059", "source": "S\u00fcddeutsche Zeitung"}, {"title": "Die Filme, auf die wir uns 2026 am meisten freuen", "url": "https://fm4.orf.at/stories/3051565/", "source": "Fm4.orf.at"}, {"title": "Streaming-Tipps des Jahres: Von \"Adolescence\" bis Haftbefehl: Diese Serien m\u00fcssen sie 2025 gesehen haben", "url": "https://www.stern.de/kultur/tv/von--adolescence--bis-haftbefehl--diese-serien-muessen-sie-2025-gesehen-haben-36997400.html", "source": "STERN.de"}, {"title": "2,20 Euro Stundenlohn \u2013 Wie deutsche Unternehmer mit Inklusion exklusive Profite machen", "url": "https://www.nachdenkseiten.de/?p=143731", "source": "Nachdenkseiten.de"}, {"title": "\u00dcberall Kriege und Krisen: Was gibt's da noch zu lachen?", "url": "https://www.faz.net/aktuell/feuilleton/debatten/worueber-kuenstler-in-krisen-und-kriegen-noch-lachen-accg-200382554.html", "source": "Faz.net"}, {"title": "PC Games Podcast #200: Unsere gro\u00dfe Jubil\u00e4umsfolge mit vielen G\u00e4sten", "url": "https://www.pcgames.de/PC-Games-Podcast-Brands-279138/News/Jubilaeum-Gaeste-Spiele-Talk-Diskussion-1488788/", "source": "PC Games"}];
-        const updateTime = 1767459474419.52; 
+        const entries = [{"title": "Aktuelle Updates aus der Medienwelt.", "is_ai": true}, {"title": "Bagger-Alarm! Dieser Superstar hat Aleks Bechtel m\u00e4chtig angegraben", "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNZU1IV0pJOW9vRlRqbXRKZWVaWU4yb2hfU1ZYVkhCWTNuR00xaDVwUjBfZThldWFiUVplbnpKcUJrd0dpWGFZNlJQQkVlaXhsMi05b3I5ZzNyRVN1N3daUFFLX29ZMG5ydTFwXzJZS1k4ZkwyUjdDeUMycS1RZ2xaRkV0emUwdXlpWVhxY3pJOXJrR01JRmx1YmhDOFhJeHJUZVBhajhVYkp0UjJBMmxCTF8xNjJPaXZoT1RfWA?oc=5", "source": "RTL.de"}, {"title": "\"Kaulitz & Kaulitz 2\": The Return of the Leichtigkeit", "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQNG90N0QzNy1LY1RMRTU2QWh4UUtLNmxmTjZqcjZjdlZoQUZTX0NTWEhQTnJxLUxuUXBLOHdPU29NWUpQZEd5Ti1XRzB1YUpZX2VGekxpUXE1TjBPNktxcHFNdko4LWR4aHFnaGdDUWw2SmxtZ0ZsTkJzdGdNY2FOZ3YtejNmZ0sxeHFVTVFB?oc=5", "source": "DWDL"}, {"title": "RTL setzt Zusammenarbeit mit Maurice Gajda aus: Frauke-Petry-Tweet gef\u00e4lscht?", "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxOUGZYYjNaMVN0ZTZkaVNvejMtVzdVN1QtTjdoNU02UEZyVkI1Ym1xaTNpUWZFM2RZVC1oNEt3OEppeGJfS2QwdkNFOXpzaTFxTlBHejFJOXpJbVV5ZWE5NXAxbHFNWnM4clBKenZNZHpMMUR6anhXT25oQnlzVk5ndWhNZFZ1UjQxbW1WeUVPTWdYelg3TVlTcU1VMHFPdllfNV90dmtGQmRxSHlFRTVfRHlqNWx6YTJqSzBNTTV5QjRMaU5fcjJiRlFsdUdfa1ctMHQxbnQxcDRhd1FvMmQzLTV3?oc=5", "source": "Spiegel"}, {"title": "RTL trennt sich von Moderator Maurice Gajda: \"Verst\u00f6\u00dfe gegen die journalistische Sorgfaltspflicht\"", "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOWDhLR1ZXUjYyVE9SSi04bWd1Z1BCRDZjbDhPSmdqZWZDREZYY1RsSUJhdWlRNGEtT29raXRIdGI0eU9INzMtbjRZUHdySG5PaURzc2FRN293cGxVR2MyeUlSb2VuYTZfcmhaNGNLT2dlSmx0N3JXNjJiOWZ5enk4Q0tVSkhXbFExSG1RdHdCZmduTmxWMUE0RUFkX2hRc1dndmRLamdkOFF3bVR5THBNdEtR?oc=5", "source": "STERN.de"}, {"title": "\u201eDrag Slam\u201c feat. Bambi Mercury", "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1BZjE0czNueXJRQ3VhX0M4N280eXNScDNGNUFoamVCdFpOZjNIWV9VNHdFWjVuWEZ4Y1RqU0prcG5vcG9mWU9ta01qaHdfQm53cXhQOXJ0bllTRDJNeUhSejZFbHNRUUlQRXlFSWdsVTN3UQ?oc=5", "source": "maenner.media"}, {"title": "Nach gefaktem Frauke-Petry-Tweet: RTL trennt sich von Maurice Gajda", "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNUFVJZkNIbFNRV2tlWVVjTno3cjdOV0NOQ0F3d1d2Y0xqc1J1Mklyd2d4a2xsZG84OWxqWWR4MU01bm1nS29mWi00SElHQ01GV3IwbWQzazBaUWtjM1pwaHhzYjNFRjJxUVRLTzJLLXRRN3VSZ1VBRmk2UDBYU1M4eWxwVDVvTDB3Q2tsVXJLQW1WZTJkbklwYnlmUi00U25uZHhMVlRUZzNranp3UkNJN2VsbGlQdnZDQVdnSjEzc3BHWDFmNWgyMmxYVnB3SGln?oc=5", "source": "FAZ"}, {"title": "Petry-Tweet gef\u00e4lscht: RTL trennt sich von Moderator Maurice Gajda", "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNd29RWmFCVjhiLVhaRm80a1B6alMxSEVka1Y0aGFZWlktTzZPT0dFLWpjWXQ2Zjh0Nkh6SWo5V3VwNjA5V0hzYkhTcVpNRFMxSEpjZWFxZjRsWXM3N0pGYXBmS3lWUTdwbGNhdXZvZ285bndUTWhVMC1tV0djcU5TZ1hlSGU4cFlJYVhMWXd4MFJvR2FCLTBoTGdBNVBXT1VsOVkyRThCdEs2SlVvV0lNamZVU0lQcHZlMVhkaDNLdmZ0QdIB3gFBVV95cUxOdmJOOFRnLUF0WThPYklHeUR5TVNUVmtsMTNkT01iejRzMG1UOUQtS0NEMzdUaHIta0l0Z0RCR1RaR2d0NWhaRm5ObHdzYWxzYWowQjNHQk9uWHF4aTRrS2ZXVjZjM09JY0l5QnZ1X1hjSXZfSjhDZnhPN3g2RHE0U2F4QXV1d2lMWDZFUnY0NjFSOE9UbHRncmF3ZnVveEFGY2h2MFAyQ3dwM2pGYVZjVXRhUV9fc2FsS3pKRFg5bHY2NERzMXZUSHRQTUpYQnZscllITzZJckdpX2xVWkE?oc=5", "source": "RND.de"}, {"title": "Magdeburger Maurice Gajda fliegt bei RTL raus: \"Mit Grunds\u00e4tzen nicht vereinbar\"", "url": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxNdTloUk1kOHlEcHVpMXdCTjN3TVJkQjR2Vm44NVpJZ2dlVDFnM2g1YXhScWN0d0FqSHRQSmJTbC1teDFXQ3VlZlBmR1R4azJrOWp1Y3ZGUXVGdk85QUxWRkwyNnpRN2J3aExLek9Ba1Q4R2RjTkZkMVlZSWR5bmFVY3lzdXotM2RCWTlDTE42MlZzYm4tN1IyUGZ1M1ZwVDFNWFd2cUg5QmE0cWlfSlZpVTJkN011OW5MelhKS3JfT2xLYnNDQW04OWpaLTBkcFdKeWd0OEdEVQ?oc=5", "source": "Volksstimme"}, {"title": "Maurice Gajda macht Freund zwei Monate nach RTL-Skandal einen Antrag", "url": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOOHpBeDhsdjdQOVFiWmg2RkxsazcxMWpZdE1sYTZRd2Fyc2syMGppRVJESnk2U2lTVnpLUHdwS21DUkt6ckllSjR3Unp2TzVPV2FWQVlvNFJCYW91TjZ2UDhsMlE5blVGbHl2MV85aElRM2N1NFZvZDBPSTlmQ2hHckVUdzNfRUExTnNTcFFhdUxxMER3a2xhQ2ZMVUdfWjRqcUVlS2UyU3pjenJWWDk4NFZyQXRENjRoQXVqZzduOUs3ci1jMDFUNjNEdHRyMlZDMnJYY1NLaHBKODNoN1ZiVGZheE5nUQ?oc=5", "source": "FOCUS online"}, {"title": "Maurice Gajda Beziehung: Wer ist der Mann an seiner Seite?", "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNT2NZUkZqTEZRaEE1d01tRkVIQThZandmZkh2MzFWMm9XaDNOVWhxbHpPUWtROW9SLWVnWGY5UGZnZWZUMExPX3E3d2RyZ3RhMUhCSDBVSDFBdENWWHREbDN2RTFQcVFSbFBtTEhmZnQ1R19mTURCOVpHUXZteV9sRGJ0VzVZemdFa2xYTWNia1UzV0FmUi1rUEoxcGNmcE1I?oc=5", "source": "desired.de"}, {"title": "Maurice Gajda: Nach fristloser RTL-K\u00fcndigung bricht er sein Schweigen", "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxPV2JYS1R3Mnd0UWM1X1piM1pDM0dORWxtdUlMODFzWnVTQ1VUN0cyaTlWYjZ0dFZmbTNPQ2pycENwbFJ1WC1QZGFPeWhxZk5NSDFjZU91UGtpaUU1NnNhVmFuLVMtMnJfU2s3Tjl0QUJFWkhwYlA0WDNiTWxsalNhaTZkc0ZuazgtVUNjZE51Z2RDd1FUVG11NnZvUjNIM3F2SDIwS2JsVjBIRGJIQ1RpbDk1QVM4UnZweVFkTllYeXdENW5H?oc=5", "source": "OK! Magazin"}, {"title": "Ex-RTL-Moderator Maurice Gajda hat sich verlobt", "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOWk1uYk5SaVI2MENMenJ0dDlSb0RLLUY0U19jR016Y3NGeXdoQVMzekIzQXFxcDd5MjdDbkMySXQtTkgtbU9tUmFoM2lVc0RCM1lvY2JHWmh6N2t0cmhCbUN4cHREenpReGRNWXIzTExVeWxzRnltUGtXbExVanVmMGdyRXNjbUhMZkpJcHJMaUVfUXc?oc=5", "source": "Bunte.de"}, {"title": "Maurice Gajda und sein Mitch sind nun offiziell verheiratet", "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPMmxFdEZsdy1vV3V3S3ltWkd2WUxTNjNVMDdjdlJYUTlMSHBMQTRnQXktYzhid00xU1g4ZnBTZnpTZVpjTFlXRm9leGFXMnE2SFFpWXltRWRjZ253d3RYZk9nRWJaVW9fXzFuak9yNGNOVWJiMG1PLW5YTGZxekhMYWpVYkZKN2ZMajhRaFprUWhjemFSNFZTMWxEQjJjQTJpb0dCTzJ1QVI0UQ?oc=5", "source": "Promiflash"}, {"title": "Maurice Gajda: RTL pr\u00fcft rund hundert Beitr\u00e4ge von Ex-Reporter", "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQcXpCb2ZONmRSanZ1VXU1NWZYNnpySURMVmYwbWZmQWFqSldIcjEzRTA1OTZ4YXlxay1WamM2SEZvaWtPUF9UUjFLbGVwREMxWkh0NXVTUmkzaS13ZWtnUTFXQzNvbWh1TGxHYVNQY1l6b1REbHlNU3h1eDI4YXU0dlpYUFdhQzNEVUR0UWh2dFhGRWJ4QkEzWnl6U2JLNk5VbWd4WU5qVnFmVEdOSktXRmZ5bENTZWxEbS0ySm9wVEt0ZkhPSUN2UklMRDA?oc=5", "source": "Spiegel"}, {"title": "\"Irgendwann wurde ich w\u00fctend\"", "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOQ1VPbFZQdkRzZDNMUk1SUHp5LXdVQVJPMHo4Vk9XYkp6LVpzME9Bam9PcklFa18yN1J3VU1lOTdUQUYwWG0ycWUyN2RxdU5POHJjb0hYQ3B2Zi1NQ0dhVDl3WWlLZUZkZ1hlZ05SNjhjdVlybmZ6UEZQUmkyWC1sNE85WU9nYkJnMGtMc2dRWG5HbnJaMjFhSk1wWFFva0gyRlE?oc=5", "source": "STERN.de"}];
+        const updateTime = 1767459927514.424; 
         let currentIndex = 0;
         
         const box = document.getElementById('content-container');
