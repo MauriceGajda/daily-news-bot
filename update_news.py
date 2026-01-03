@@ -6,8 +6,8 @@ from datetime import datetime
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- DEINE OPTIMIERTE SUCHLISTE (Personen, Shows & Keywords) ---
-SUCH_BEGRIFFE = [
+# Deine exklusive Liste
+MEINE_THEMEN = [
     "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
     "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
     "Gino Bormann", "Chenoa", "Saskia", "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
@@ -22,61 +22,53 @@ SUCH_BEGRIFFE = [
     "Meryl Deep Talk", "Dachboden Revue", "Never Meet Your Idols", "Redlektion", 
     "Gamer By Heart", "Base Talk", "Interior Intim", "Süß & Leiwand", "Busenfreundin", 
     "MGMB", "Gschichten aus der Schwulenbar", "Machgeschichten", "Celebrate Organizations", 
-    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht",
-    "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!",
-    "Podcast", "Podcasts"
+    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht"
 ]
 
-# Suchanfrage mit Anführungszeichen für Exaktheit
-SUCH_QUERY = " OR ".join([f'"{b}"' for b in SUCH_BEGRIFFE])
+def fetch_news(query, lang='de'):
+    url = f"https://newsapi.org/v2/everything?q={query}&language={lang}&sortBy=publishedAt&pageSize=10&apiKey={NEWS_KEY}"
+    r = requests.get(url)
+    return r.json().get('articles', [])
 
 def start_process():
-    # Suche auf Deutsch (language=de)
-    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
+    # STUFE 1: Deine Liste
+    query_spezifisch = " OR ".join([f'"{b}"' for b in MEINE_THEMEN])
+    articles = fetch_news(query_spezifisch, 'de')
+    status = "Personalisiert"
+
+    # STUFE 2: Branchen-News (Fallback)
+    if not articles:
+        print("Stufe 1 leer, suche Branchen-News...")
+        articles = fetch_news("Videopodcast OR Podcast-Produktion OR Podcasting", 'de')
+        status = "Branchen-Fokus"
+
+    # STUFE 3: Globaler Trend (Sicherheitsnetz)
+    if not articles:
+        print("Stufe 2 leer, suche globale Podcast-Trends...")
+        articles = fetch_news("Podcast", 'en')
+        status = "Global Trends"
+
+    if not articles:
+        return "Keine aktuellen News verfügbar.", "Offline"
+
+    # KI Zusammenfassung
+    headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
+    text_to_summarize = " \n".join(headlines[:8])
+
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    payload = {"contents": [{"parts": [{"text": f"Fasse diese News kurz in 4 Sätzen auf Deutsch zusammen. Thema ist {status}:\n\n{text_to_summarize}"}]}]}
     
     try:
-        r = requests.get(news_url)
-        news_data = r.json()
-        articles = news_data.get('articles', [])
-        
-        # Fallback-Suche, falls die exakte Suche (mit "") zu leer ist
-        if not articles:
-            lockere_suche = " OR ".join(SUCH_BEGRIFFE[:20]) 
-            news_url = f"https://newsapi.org/v2/everything?q={lockere_suche}&language=de&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
-            r = requests.get(news_url)
-            articles = r.json().get('articles', [])
-
-        if not articles:
-            return "Aktuell keine neuen deutschen Schlagzeilen zu den Shows, Personen oder dem Thema Podcasts gefunden."
-
-        headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
-        text_to_summarize = " \n".join(headlines)
-
-        # Gemini 1.5 Flash für die Zusammenfassung
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-        
-        payload = {
-            "contents": [{"parts": [{"text": f"Fasse diese News zu deutschen Podcasts und Medien-Persönlichkeiten in 4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
-        }
-        
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(gemini_url, json=payload, headers=headers)
-        res_json = response.json()
-
-        if "candidates" in res_json:
-            return res_json['candidates'][0]['content']['parts'][0]['text']
-        else:
-            # Fallback Link-Liste
-            html = "<b>Aktuelle Fundstücke (Podcast-News):</b><br><br>"
-            for a in articles[:8]:
-                html += f"• <a href='{a['url']}' target='_blank' style='color: #e91e63; text-decoration: none; font-weight: 500;'>{a['title']}</a><br><br>"
-            return html
-
-    except Exception as e:
-        return f"Dienst kurzzeitig im Standby."
+        response = requests.post(gemini_url, json=payload, headers={'Content-Type': 'application/json'})
+        summary = response.json()['candidates'][0]['content']['parts'][0]['text']
+        return summary, status
+    except:
+        # Fallback Link-Liste
+        html_links = "<br>".join([f"• <a href='{a['url']}'>{a['title']}</a>" for a in articles[:5]])
+        return f"Hier sind die aktuellsten Meldungen ({status}):<br>{html_links}", status
 
 # HTML Layout
-result_text = start_process()
+result_text, search_status = start_process()
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -84,19 +76,20 @@ html_content = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: -apple-system, system-ui, sans-serif; background-color: #f4f7f9; padding: 20px; display: flex; justify-content: center; }}
-        .card {{ background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.06); max-width: 600px; width: 100%; border-left: 6px solid #e91e63; }}
-        h1 {{ color: #333; font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }}
-        .content {{ line-height: 1.8; color: #444; font-size: 1.05rem; white-space: pre-wrap; }}
-        .date {{ font-size: 0.75rem; color: #999; margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }}
-        a {{ color: #e91e63; text-decoration: none; }}
+        body {{ font-family: sans-serif; background: #f0f2f5; padding: 20px; }}
+        .card {{ background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto; border-top: 6px solid #e91e63; }}
+        h1 {{ font-size: 1.2rem; color: #333; margin-bottom: 15px; }}
+        .tag {{ display: inline-block; background: #ffebee; color: #e91e63; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-bottom: 10px; }}
+        .content {{ line-height: 1.6; color: #444; }}
+        .date {{ font-size: 0.7rem; color: #999; margin-top: 20px; text-align: right; }}
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>Show & People Tracker (DE)</h1>
+        <div class="tag">{search_status}</div>
+        <h1>Podcast & Media Update</h1>
         <div class="content">{result_text}</div>
-        <div class="date">Letztes Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
+        <div class="date">Aktualisiert: {datetime.now().strftime('%d.%m.%Y %H:%M')}</div>
     </div>
 </body>
 </html>
