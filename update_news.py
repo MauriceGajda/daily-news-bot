@@ -65,12 +65,9 @@ def start_process():
     return ticker_data, status
 
 ticker_entries, search_status = start_process()
-
-# --- NEU: ZEITLOGIK FÜR DEN TICKER ---
-# Wir speichern die aktuelle Zeit als Timestamp für JavaScript
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML MIT DYNAMISCHER ZEITANZEIGE ---
+# --- HTML MIT ECKIGEM DESIGN & GRÖSSERER MOBIL-SCHRIFT ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -78,12 +75,16 @@ html_content = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body {{ margin: 0; padding: 0; background: transparent; font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; }}
+        body {{ 
+            margin: 0; padding: 0; background: transparent; 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            overflow: hidden; height: 85px; 
+        }}
         
         #podcast-news-widget {{
-            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 8px;
+            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 0px; /* ECKIG */
             background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            max-height: 85px;
+            height: 85px; box-sizing: border-box;
         }}
 
         .ticker-header {{
@@ -113,7 +114,7 @@ html_content = f"""
             align-items: center; justify-content: center; text-align: center;
         }}
 
-        .status-tag {{ color: rgb(255, 236, 192); opacity: 0.5; font-size: 7px; text-transform: uppercase; margin-bottom: 1px; }}
+        .status-tag {{ color: rgb(255, 236, 192); opacity: 0.5; font-size: 8px; text-transform: uppercase; margin-bottom: 1px; }}
         
         .news-text {{
             color: rgb(255, 236, 192); font-size: 11px; line-height: 1.2; margin: 0;
@@ -125,9 +126,11 @@ html_content = f"""
         @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(2px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         @keyframes progress {{ from {{ width: 0%; }} to {{ width: 100%; }} }}
 
-        @media (max-width: 480px) {{
-            .news-text {{ font-size: 10px; }}
-            .header-msg {{ font-size: 10px; }}
+        /* Mobile Optimization: Schrift um 2px vergrößert */
+        @media (max-width: 768px) {{
+            .news-text {{ font-size: 13px; }}
+            .header-msg {{ font-size: 11px; }}
+            .status-tag {{ font-size: 9px; }}
         }}
     </style>
 </head>
@@ -156,7 +159,6 @@ html_content = f"""
         const status = document.getElementById('status');
         const bar = document.getElementById('progress-bar');
         
-        // Header Wechsel
         const h1 = document.getElementById('h1');
         const h2 = document.getElementById('h2');
         setInterval(() => {{
@@ -169,9 +171,8 @@ html_content = f"""
 
         function getTimeAgo() {{
             const diff = Math.floor((Date.now() - updateTime) / 60000);
-            if (diff < 1) return "Gerade eben aktualisiert";
-            if (diff === 1) return "Vor 1 Minute aktualisiert";
-            return `Vor ${{diff}} Minuten aktualisiert`;
+            if (diff < 1) return "Gerade eben";
+            return `Vor ${{diff}} Min.`;
         }}
 
         function showNext() {{
