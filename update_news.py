@@ -12,17 +12,17 @@ GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 # Nur diese Namen werden bei Google News gesucht:
 PROMI_NAMEN = [
-    "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
-    "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
-    "Gino Bormann", "Chenoa", "Saskia", "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
-    "Dieter Könnes", "Ewa De Lubomirz", "Fynn Kliemann", "Hannes", "Babo", "Jim Krawall", 
-    "Julian F.M. Stoeckel", "Jurassica Parka", "Margot Schlönzke", "Meryl Deep", "Michael Gajda", 
-    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia"
+    "Aleks Bechtel", "Alex Schwabe", "Yvonne Mouhlen", "Aaron Breyer", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
+    "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", "Daniel Zobel",
+    "Gino Bormann", "Chenoa Überdosis Crime", "Saskia Überdosis Crime", "Cherin El Masri", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
+    "Dieter Könnes", "Ewa De Lubomirz", "Fynn Kliemann", "Hannes MBGM", "Babo MGMB", "Jim Krawall", 
+    "Julian F.M. Stoeckel", "Margot Schlönzke", "Meryl Deep", "Michael Gajda", 
+    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia Krüger"
 ]
 
 # Diese Begriffe werden NUR in der News-API gesucht:
 ALLGEMEINE_THEMEN = [
-    "Family Affairs", "lemondreams", "German Humour", "Democracy Now!", "Aktivkohle", 
+    "Family Affairs", "lemondreams", "German Humour", "Democracy Now!", "Aktivkohle", "Einfach Leben",
     "Bart & Schnauze", "Cineolux", "Talk? Now! News", "Tagebuch einer Dragqueen", 
     "Überdosis Crime", "Talk Now News Reality", "Übers Podcasten", "Schöne Dinge", 
     "Big Names Only", "Robin Gut", "Catch Me If You Speak", "TMDA", "Jein!", 
