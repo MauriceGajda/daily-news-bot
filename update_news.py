@@ -46,19 +46,18 @@ def start_process():
     if not articles:
         return [], "Keine News", status
 
-    # KI Zusammenfassung erstellen
-    headlines_text = " \n".join([a['title'] for a in articles[:8]])
+    # KI Zusammenfassung (Extra kurz für flachen Ticker)
+    headlines_text = " \n".join([a['title'] for a in articles[:5]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": f"Fasse diese News kurz in 2 Sätzen zusammen:\n\n{headlines_text}"}]}]}
+    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 15 Wörtern zusammen:\n\n{headlines_text}"}]}]}
     
-    summary = "Aktuelle Updates aus der Welt der Podcasts."
+    summary = "Aktuelle Updates aus der Medienwelt."
     try:
         res = requests.post(gemini_url, json=payload, headers={'Content-Type': 'application/json'}, timeout=10)
         summary = res.json()['candidates'][0]['content']['parts'][0]['text'].strip()
     except:
         pass
 
-    # Liste für den Ticker aufbereiten
     ticker_data = [{"title": summary, "is_ai": True}]
     for a in articles[:10]:
         ticker_data.append({"title": a['title'], "url": a['url'], "source": a['source']['name']})
@@ -68,54 +67,81 @@ def start_process():
 ticker_entries, search_status = start_process()
 timestamp = datetime.now().strftime('%H:%M')
 
-# --- HTML MIT TICKER-LOGIK ---
+# --- HTML MIT FLACHEM DESIGN & HEADER-WECHSEL ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body {{ margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; overflow: hidden; }}
+        body {{ margin: 0; padding: 0; background: transparent; font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; }}
+        
         #podcast-news-widget {{
-            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 10px;
-            background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 8px;
+            background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            max-height: 85px; /* Reduzierte Höhe um ca. 40% */
         }}
+
         .ticker-header {{
-            background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 7px 12px;
-            font-weight: bold; font-size: 13px; display: flex; align-items: center; white-space: nowrap;
+            background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 5px 12px;
+            font-weight: bold; font-size: 12px; display: flex; align-items: center; 
+            height: 22px; position: relative; overflow: hidden;
         }}
+
+        #header-text-container {{ position: relative; height: 100%; width: 100%; display: flex; align-items: center; }}
+        
+        .header-msg {{
+            position: absolute; width: 100%; transition: all 0.6s ease;
+            opacity: 0; transform: translateY(10px);
+        }}
+        .header-msg.active {{ opacity: 1; transform: translateY(0); }}
+
         .live-dot {{
-            height: 8px; width: 8px; background-color: #ff0000; border-radius: 50%;
-            margin-right: 10px; animation: pulse 2s infinite ease-in-out;
+            height: 6px; width: 6px; background-color: #ff0000; border-radius: 50%;
+            margin-right: 8px; flex-shrink: 0; animation: pulse 2s infinite ease-in-out;
         }}
-        #progress-bar-container {{ width: 100%; height: 3px; background: rgba(0,0,0,0.2); }}
+
+        #progress-bar-container {{ width: 100%; height: 2px; background: rgba(0,0,0,0.2); }}
         #progress-bar {{ width: 0%; height: 100%; background: rgb(255, 236, 192); }}
+
         #feed-box {{
-            padding: 10px 15px; height: 50px; display: flex; flex-direction: column;
+            padding: 6px 12px; height: 38px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
         }}
-        .status-tag {{ color: rgb(255, 236, 192); opacity: 0.6; font-size: 8px; text-transform: uppercase; margin-bottom: 2px; }}
+
+        .status-tag {{ color: rgb(255, 236, 192); opacity: 0.5; font-size: 7px; text-transform: uppercase; margin-bottom: 1px; }}
+        
         .news-text {{
-            color: rgb(255, 236, 192); font-size: 12px; line-height: 1.3; margin: 0;
+            color: rgb(255, 236, 192); font-size: 11px; line-height: 1.2; margin: 0;
             text-decoration: none; font-weight: bold; animation: fadeIn 0.5s;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block;
         }}
-        @keyframes pulse {{ 0%, 100% {{ opacity: 0.3; }} 50% {{ opacity: 1; }} }}
-        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(3px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+
+        @keyframes pulse {{ 0%, 100% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} }}
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(2px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         @keyframes progress {{ from {{ width: 0%; }} to {{ width: 100%; }} }}
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {{
+            .news-text {{ font-size: 10px; }}
+            .header-msg {{ font-size: 10px; }}
+        }}
     </style>
 </head>
 <body>
     <div id="podcast-news-widget">
         <div class="ticker-header">
             <span class="live-dot"></span>
-            News rund um Videopodcasts, unsere Shows & Hosts und Talk?Now!
+            <div id="header-text-container">
+                <span id="h1" class="header-msg active">Talk?Now! News</span>
+                <span id="h2" class="header-msg">Aktuelle News zu Videopodcasts, Medien und unsere Shows</span>
+            </div>
         </div>
         <div id="progress-bar-container"><div id="progress-bar"></div></div>
         <div id="feed-box">
             <div id="status" class="status-tag"></div>
-            <div id="content-container"></div>
+            <div id="content-container" style="width: 100%;"></div>
         </div>
     </div>
 
@@ -125,14 +151,27 @@ html_content = f"""
         const box = document.getElementById('content-container');
         const status = document.getElementById('status');
         const bar = document.getElementById('progress-bar');
+        
+        // Header Wechsel Logik
+        const h1 = document.getElementById('h1');
+        const h2 = document.getElementById('h2');
+        setInterval(() => {{
+            if(h1.classList.contains('active')) {{
+                h1.classList.remove('active');
+                h2.classList.add('active');
+            }} else {{
+                h2.classList.remove('active');
+                h1.classList.add('active');
+            }}
+        }}, 4000);
 
         function showNext() {{
             const entry = entries[currentIndex];
             bar.style.animation = 'none';
             bar.offsetHeight; 
-            bar.style.animation = 'progress 3s linear forwards';
+            bar.style.animation = 'progress 3.5s linear forwards';
 
-            status.innerText = entry.is_ai ? "KI-ZUSAMMENFASSUNG | {timestamp}" : (entry.source + " | {timestamp}");
+            status.innerText = entry.is_ai ? "KI-Fokus | {timestamp}" : (entry.source + " | {timestamp}");
             
             if (entry.url) {{
                 box.innerHTML = `<a href="${{entry.url}}" target="_blank" class="news-text">${{entry.title}}</a>`;
@@ -143,7 +182,7 @@ html_content = f"""
             currentIndex = (currentIndex + 1) % entries.length;
         }}
 
-        setInterval(showNext, 3000);
+        setInterval(showNext, 3500);
         showNext();
     </script>
 </body>
