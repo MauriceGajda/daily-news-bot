@@ -5,12 +5,24 @@ from datetime import datetime
 
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
-# HIER DAS NEUE THEMA:
-TOPIC = "Videopodcast"
+
+# --- DEINE PERSONEN-LISTE ---
+PERSONEN = [
+    "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", 
+    "Annabelle Mandeng", "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", 
+    "Maurice Gajda", "Charlet C. House", "Gino Bormann", "Chenoa", "Saskia", 
+    "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", "Dieter Könnes", 
+    "Ewa De Lubomirz", "Fynn Kliemann", "Hannes", "Babo", "Jim Krawall", 
+    "Julian F.M. Stoeckel", "Jurassica Parka", "Margot Schlönzke", "Meryl Deep", 
+    "Michael Gajda", "Ridal Carel Tchoukuegno", "Sandra Kuhn"
+]
+
+# Erstellt die Suchanfrage: "Name 1" OR "Name 2" OR ...
+SUCH_QUERY = " OR ".join([f'"{p}"' for p in PERSONEN])
 
 def start_process():
-    # Suche nach Videopodcast, sortiert nach den neuesten Treffern
-    news_url = f"https://newsapi.org/v2/everything?q={TOPIC}&language=de&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
+    # Suche in deutschen News, begrenzt auf die letzten 8 Treffer für bessere Übersicht
+    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=8&apiKey={NEWS_KEY}"
     
     try:
         r = requests.get(news_url)
@@ -18,16 +30,15 @@ def start_process():
         articles = news_data.get('articles', [])
         
         if not articles:
-            return "Heute gibt es keine neuen Meldungen zum Thema Videopodcasts."
+            return "Aktuell gibt es keine neuen Pressemeldungen zu den gewählten Personen."
         
-        headlines = [a['title'] for a in articles]
+        headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
         text_to_summarize = " \n".join(headlines)
 
-        # Versuch mit Gemini Pro (stabilerer Endpunkt)
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_KEY}"
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
         
         payload = {
-            "contents": [{"parts": [{"text": f"Fasse diese News zum Thema {TOPIC} kurz in 3 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
+            "contents": [{"parts": [{"text": f"Fasse die wichtigsten News zu diesen Personen kurz in 3-4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
         }
         
         headers = {'Content-Type': 'application/json'}
@@ -38,16 +49,15 @@ def start_process():
             return res_json['candidates'][0]['content']['parts'][0]['text']
         else:
             # FALLBACK: Liste mit anklickbaren Links
-            print("KI noch im Standby, zeige Link-Liste.")
-            fallback_html = "Die KI-Zusammenfassung wird vorbereitet. Hier sind die aktuellen Schlagzeilen:<br><br>"
+            fallback_html = "Zusammenfassung aktuell nicht verfügbar. Hier sind die neuesten Schlagzeilen:<br><br>"
             for a in articles:
-                fallback_html += f"• <a href='{a['url']}' target='_blank' style='color: #1a73e8; text-decoration: none; font-weight: 500;'>{a['title']}</a><br><br>"
+                fallback_html += f"• <a href='{a['url']}' target='_blank' style='color: #1a73e8; text-decoration: none;'>{a['title']}</a> ({a['source']['name']})<br><br>"
             return fallback_html
 
     except Exception as e:
-        return f"Dienst aktuell nicht erreichbar."
+        return f"Fehler beim Abrufen der Daten."
 
-# HTML Erstellung (Wichtig: result_text wird jetzt als HTML interpretiert)
+# HTML Layout
 result_text = start_process()
 html_content = f"""
 <!DOCTYPE html>
@@ -56,18 +66,18 @@ html_content = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: -apple-system, sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; justify-content: center; }}
-        .card {{ background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 550px; width: 100%; }}
-        h1 {{ color: #d32f2f; font-size: 1.4rem; margin-top: 0; border-bottom: 2px solid #ffebee; padding-bottom: 10px; }}
-        .content {{ line-height: 1.6; color: #444; }}
-        .date {{ font-size: 0.75rem; color: #999; margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 10px; }}
+        body {{ font-family: -apple-system, sans-serif; background-color: #f8f9fa; padding: 20px; display: flex; justify-content: center; }}
+        .card {{ background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 600px; width: 100%; border-top: 5px solid #1a73e8; }}
+        h1 {{ color: #1a73e8; font-size: 1.2rem; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }}
+        .content {{ line-height: 1.7; color: #333; }}
+        .date {{ font-size: 0.7rem; color: #aaa; margin-top: 25px; text-align: center; font-style: italic; border-top: 1px solid #eee; padding-top: 10px; }}
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>Update: {TOPIC}</h1>
+        <h1>People Tracker Update</h1>
         <div class="content">{result_text}</div>
-        <div class="date">Letzter Scan: {datetime.now().strftime('%d.%m.%Y %H:%M')} Uhr</div>
+        <div class="date">Letztes Update am {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
     </div>
 </body>
 </html>
