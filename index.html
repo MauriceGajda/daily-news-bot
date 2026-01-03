@@ -5,20 +5,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; margin: auto; border-top: 6px solid #e91e63; }
-        h1 { font-size: 1.2rem; color: #333; margin-bottom: 15px; }
-        .tag { display: inline-block; background: #ffebee; color: #e91e63; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-bottom: 10px; }
-        .content { line-height: 1.6; color: #444; }
-        .date { font-size: 0.7rem; color: #999; margin-top: 20px; text-align: right; }
+        body { margin: 0; padding: 0; background: transparent; font-family: Arial, sans-serif; overflow: hidden; }
+        
+        #podcast-news-widget {
+            width: 100%;
+            border: 1px solid rgb(255, 236, 192);
+            border-radius: 10px;
+            background: rgb(0, 21, 56);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .ticker-header {
+            background: rgb(255, 236, 192);
+            color: rgb(0, 21, 56);
+            padding: 7px 12px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .live-dot {
+            height: 8px;
+            width: 8px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            animation: pulse-live 2s infinite ease-in-out;
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        #progress-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgb(255, 236, 192) 0%, rgb(204, 189, 154) 100%);
+        }
+
+        #feed-box {
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+
+        .status-info {
+            color: rgb(255, 236, 192);
+            opacity: 0.6;
+            font-size: 9px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-summary {
+            color: rgb(255, 236, 192);
+            font-size: 13px;
+            line-height: 1.4;
+            text-align: center;
+            margin: 0;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes pulse-live {
+            0% { opacity: 0.2; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.2; transform: scale(0.9); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            #podcast-news-widget { border-radius: 0; border-left: none; border-right: none; }
+            .ticker-header { justify-content: center; }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="tag">Branchen-Fokus</div>
-        <h1>Podcast & Media Update</h1>
-        <div class="content">Hier sind die aktuellsten Meldungen (Branchen-Fokus):<br>• <a href='https://www.sueddeutsche.de/panorama/crans-montana-brand-bar-todesopfer-podcast-li.3362243'>SZ-Podcast „Auf den Punkt“: Crans-Montana: Wieso konnten so wenige Menschen fliehen?</a><br>• <a href='https://www.dwdl.de/magazin/104286/ja_er_lebt_noch_was_aus_dem_rtlwald_in_der_eifel_geworden_ist/'>Ja, er lebt noch! Was aus dem RTL-Wald in der Eifel geworden ist</a><br>• <a href='https://www.zeit.de/politik/2026-01/brandkatastrophe-schweiz-crans-montana-bar-silvester-nachrichtenpodcast'>Brand in Schweizer Skiort: "Eine der schlimmsten Tragödien" in der Schweizer Geschichte</a><br>• <a href='https://www.diepresse.com/20437831/replay-dieser-pop-hit-klingt-nach-vivaldi-und-mehr-wir-analysieren'>Replay: Dieser Pop-Hit klingt nach Vivaldi und mehr: Wir analysieren Rosalías „Berghain“</a><br>• <a href='https://www.sueddeutsche.de/politik/merz-rueckblick-kanzler-jahr-berlin-li.3359059'>SZ-Podcast „Auf den Punkt“: 2025: Wie war Merz' erstes Kanzler-Jahr?</a></div>
-        <div class="date">Aktualisiert: 03.01.2026 15:44</div>
+
+<div id="podcast-news-widget">
+    <div class="ticker-header">
+        <span class="live-dot"></span>
+        AI People & Show Tracker
     </div>
+    
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="feed-box">
+        <div class="status-info">Branchen-Fokus Update | 03.01.2026 15:53</div>
+        <p class="ai-summary">Aktuelle Meldungen aus dem Bereich Branchen-Fokus: SZ-Podcast „Auf den Punkt“: Crans-Montana: Wieso konnten so wenige Menschen fliehen?</p>
+    </div>
+</div>
+
 </body>
 </html>
