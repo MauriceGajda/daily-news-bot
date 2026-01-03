@@ -1,7 +1,8 @@
 name: Update News Page
 on:
   schedule:
-    - cron: '0 8 * * *'
+    # Dies sorgt für ein Update alle 15 Minuten
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,7 +12,9 @@ jobs:
       contents: write
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 # Aktualisiert auf v4
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Wichtig, um die Historie für saubere Commits zu haben
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -20,9 +23,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install requests
-
-      - name: Debug - Show Python File
-        run: cat update_news.py # Dies zeigt uns im Log, was wirklich im Skript steht!
 
       - name: Run script
         env:
@@ -33,5 +33,6 @@ jobs:
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Daily news update"
+          commit_message: "Automatisches Ticker Update [skip ci]"
           file_pattern: index.html
+          push_options: '--force' # Erzwingt das Update bei Konflikten
