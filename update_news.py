@@ -24,7 +24,7 @@ def start_process():
         text_to_summarize = " \n".join(headlines)
 
         # 2. Gemini kontaktieren (v1beta Pfad ist für Flash oft stabiler)
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_KEY}"
         
         payload = {
             "contents": [{
