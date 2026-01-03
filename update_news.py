@@ -8,14 +8,20 @@ import email.utils
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- DEINE THEMENLISTE ---
-MEINE_THEMEN = [
+# --- KLAR GETRENNTE LISTEN ---
+
+# Nur diese Namen werden bei Google News gesucht:
+PROMI_NAMEN = [
     "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
     "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
     "Gino Bormann", "Chenoa", "Saskia", "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
     "Dieter Könnes", "Ewa De Lubomirz", "Fynn Kliemann", "Hannes", "Babo", "Jim Krawall", 
     "Julian F.M. Stoeckel", "Jurassica Parka", "Margot Schlönzke", "Meryl Deep", "Michael Gajda", 
-    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia", 
+    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia"
+]
+
+# Diese Begriffe werden NUR in der News-API gesucht:
+ALLGEMEINE_THEMEN = [
     "Family Affairs", "lemondreams", "German Humour", "Democracy Now!", "Aktivkohle", 
     "Bart & Schnauze", "Cineolux", "Talk? Now! News", "Tagebuch einer Dragqueen", 
     "Überdosis Crime", "Talk Now News Reality", "Übers Podcasten", "Schöne Dinge", 
@@ -55,14 +61,20 @@ def fetch_google_news(query):
     return google_articles
 
 def start_process():
-    search_query = " OR ".join([f'"{b}"' for b in MEINE_THEMEN[:20]])
-    api_results = fetch_news_api(search_query)
-    google_results = fetch_google_news(search_query)
+    # Google News bekommt NUR die Namen
+    google_query = " OR ".join([f'"{n}"' for n in PROMI_NAMEN])
     
+    # News-API bekommt alles kombiniert
+    full_list = PROMI_NAMEN + ALLGEMEINE_THEMEN
+    api_query = " OR ".join([f'"{t}"' for t in full_list[:30]]) # Begrenzung auf 30 Begriffe für API Stabilität
+    
+    api_results = fetch_news_api(api_query)
+    google_results = fetch_google_news(google_query)
+    
+    # Mixen (2:1)
     combined = []
     api_idx = 0
     google_idx = 0
-    
     while api_idx < len(api_results) or google_idx < len(google_results):
         for _ in range(2):
             if api_idx < len(api_results):
@@ -78,6 +90,7 @@ def start_process():
     else:
         status_text = "Personalisiert"
 
+    # KI-Zusammenfassung
     headlines_for_ai = " \n".join([a['title'] for a in combined[:8]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_for_ai}"}]}]}
@@ -98,7 +111,7 @@ def start_process():
 ticker_entries, search_status = start_process()
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML GENERIERUNG ---
+# --- HTML GENERIERUNG (Unverändert für das Design) ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
