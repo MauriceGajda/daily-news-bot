@@ -1,8 +1,10 @@
 import requests
 import os
 import json
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
+# API Keys aus den GitHub Secrets
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -26,30 +28,57 @@ MEINE_THEMEN = [
     "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!", "Podcast", "Podcasts"
 ]
 
-def fetch_news(query, lang='de'):
-    url = f"https://newsapi.org/v2/everything?q={query}&language={lang}&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
+def fetch_news_api(query):
+    url = f"https://newsapi.org/v2/everything?q={query}&language=de&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
     try:
         r = requests.get(url, timeout=10)
         return r.json().get('articles', [])
     except:
         return []
 
+def fetch_google_news(query):
+    # Google News RSS Feed (kostenlos & aktuell)
+    rss_url = f"https://news.google.com/rss/search?q={query}&hl=de&gl=DE&ceid=DE:de"
+    google_articles = []
+    try:
+        r = requests.get(rss_url, timeout=10)
+        root = ET.fromstring(r.content)
+        for item in root.findall('.//item')[:15]:
+            title = item.find('title').text
+            # Google News Titel enthalten oft die Quelle am Ende (z.B. "Titel - Quelle")
+            # Wir versuchen das für eine saubere Optik zu trennen
+            clean_title = title.split(" - ")[0]
+            source_name = title.split(" - ")[-1] if " - " in title else "Google News"
+            
+            google_articles.append({
+                'title': clean_title,
+                'url': item.find('link').text,
+                'source': {'name': source_name}
+            })
+    except:
+        pass
+    return google_articles
+
 def start_process():
-    query_spezifisch = " OR ".join([f'"{b}"' for b in MEINE_THEMEN])
-    articles = fetch_news(query_spezifisch, 'de')
+    # Suche für die Top-Themen (begrenzt, um Google nicht zu überlasten)
+    search_query = " OR ".join([f'"{b}"' for b in MEINE_THEMEN[:20]])
+    
+    # Abruf von beiden Quellen
+    api_results = fetch_news_api(search_query)
+    google_results = fetch_google_news(search_query)
+    
+    # Kombinieren (Google News zuerst, da oft aktueller)
+    combined = google_results + api_results
     status = "Personalisiert"
 
-    if not articles:
-        articles = fetch_news("Videopodcast OR Podcast-Produktion", 'de')
+    if not combined:
+        combined = fetch_google_news("Videopodcast OR Podcast Produktion")
         status = "Branchen-Fokus"
 
-    if not articles:
-        return [], "Keine News", status
-
-    # KI Zusammenfassung
-    headlines_text = " \n".join([a['title'] for a in articles[:5]])
+    # KI Zusammenfassung via Gemini
+    headlines_for_ai = " \n".join([a['title'] for a in combined[:8]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_text}"}]}]}
+    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_for_ai}"}]}]}
     
     summary = "Aktuelle Updates aus der Medienwelt."
     try:
@@ -59,15 +88,16 @@ def start_process():
         pass
 
     ticker_data = [{"title": summary, "is_ai": True}]
-    for a in articles[:10]:
+    for a in combined[:15]:
         ticker_data.append({"title": a['title'], "url": a['url'], "source": a['source']['name']})
     
     return ticker_data, status
 
+# Prozess starten
 ticker_entries, search_status = start_process()
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML MIT ANPASSUNGEN ---
+# --- HTML GENERIERUNG ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -89,8 +119,9 @@ html_content = f"""
 
         .ticker-header {{
             background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 5px 12px;
-            font-weight: bold; font-size: 12px; display: flex; align-items: center; 
-            height: 22px; position: relative; overflow: hidden;
+            font-weight: bold; font-size: 13px; 
+            display: flex; align-items: center; 
+            height: 24px; position: relative; overflow: hidden;
         }}
 
         #header-text-container {{ position: relative; height: 100%; width: 100%; display: flex; align-items: center; }}
@@ -106,21 +137,24 @@ html_content = f"""
             margin-right: 8px; flex-shrink: 0; animation: pulse 2s infinite ease-in-out;
         }}
 
-        #progress-bar-container {{ width: 100%; height: 2px; background: rgba(0,0,0,0.2); }}
-        #progress-bar {{ width: 0%; height: 100%; background: rgb(255, 236, 192); }}
+        #progress-bar-container {{ width: 100%; height: 3px; background: rgba(0,0,0,0.2); }}
+        #progress-bar {{ 
+            width: 0%; height: 100%; 
+            background: linear-gradient(to bottom, rgb(204, 189, 154) 0%, rgb(255, 236, 192) 100%); 
+        }}
 
         #feed-box {{
-            padding: 4px 12px; height: 42px; display: flex; flex-direction: column;
+            padding: 4px 12px; height: 38px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
         }}
 
         .status-tag {{ 
-            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; /* +1px */
+            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; 
             text-transform: uppercase; margin-bottom: 2px; 
         }}
         
         .news-text {{
-            color: rgb(255, 236, 192); font-size: 13px; /* +2px */
+            color: rgb(255, 236, 192); font-size: 13px; 
             line-height: 1.2; margin: 0;
             text-decoration: none; font-weight: bold; animation: fadeIn 0.5s;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block;
@@ -130,10 +164,10 @@ html_content = f"""
         @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(2px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         @keyframes progress {{ from {{ width: 0%; }} to {{ width: 100%; }} }}
 
-        /* Mobile Optimization: +2px auf die neuen Desktop-Werte */
         @media (max-width: 768px) {{
             .news-text {{ font-size: 15px; }}
-            .header-msg {{ font-size: 11px; }}
+            .ticker-header {{ font-size: 15px; height: 26px; }}
+            .header-msg {{ font-size: 15px; }}
             .status-tag {{ font-size: 10px; }}
         }}
     </style>
@@ -204,5 +238,6 @@ html_content = f"""
 </html>
 """
 
+# Speichern der index.html
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_content)
