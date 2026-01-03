@@ -3,36 +3,33 @@ import os
 import json
 from datetime import datetime
 
-# Keys aus GitHub Secrets laden
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+TOPIC = "Künstliche Intelligenz"
 
 def start_process():
-    print("--- SCHRITT 1: News abrufen ---")
-    topic = "Künstliche Intelligenz"
-    # News abrufen
-    news_url = f"https://newsapi.org/v2/everything?q={topic}&language=de&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
+    # 1. News abrufen
+    news_url = f"https://newsapi.org/v2/everything?q={TOPIC}&language=de&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
     
     try:
         r = requests.get(news_url)
         news_data = r.json()
-        if news_data.get('status') != 'ok':
-            return f"NewsAPI Fehler: {news_data.get('message')}"
-        
         articles = news_data.get('articles', [])
+        
         if not articles:
-            return "Keine aktuellen Artikel gefunden."
-            
-        text_to_summarize = "\n".join([f"Titel: {a['title']}\nInhalt: {a.get('description', '')}" for a in articles])
+            return "Heute gibt es keine neuen Schlagzeilen."
+        
+        # Schlagzeilen für die KI vorbereiten
+        headlines = [a['title'] for a in articles]
+        text_to_summarize = " \n".join(headlines)
 
-        print("--- SCHRITT 2: Gemini kontaktieren ---")
-        # Korrigierte URL für die stabile V1 API
-        gemini_url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        # 2. Gemini kontaktieren (v1beta Pfad ist für Flash oft stabiler)
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
         
         payload = {
             "contents": [{
                 "parts": [{
-                    "text": f"Fasse diese News-Schlagzeilen kurz und bündig in 3-4 Sätzen zusammen. Nutze Deutsch:\n\n{text_to_summarize}"
+                    "text": f"Fasse diese News kurz in 3 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"
                 }]
             }]
         }
@@ -41,38 +38,41 @@ def start_process():
         response = requests.post(gemini_url, json=payload, headers=headers)
         res_json = response.json()
 
+        # Überprüfung der Antwort
         if "candidates" in res_json:
-            summary = res_json['candidates'][0]['content']['parts'][0]['text']
-            return summary
+            return res_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            print("Vollständige Antwort von Google:", json.dumps(res_json, indent=2))
-            return "Die KI konnte die News gerade nicht zusammenfassen (API-Fehler)."
+            # FALLBACK: Wenn die KI streikt, zeigen wir einfach die Schlagzeilen an!
+            print("KI Fehler, nutze Fallback-Liste.")
+            fallback_text = "Die KI-Zusammenfassung ist gerade nicht verfügbar. Hier sind die Top-Themen:\n\n"
+            for line in headlines:
+                fallback_text += f"• {line}\n"
+            return fallback_text
 
     except Exception as e:
-        return f"Ein unerwarteter Fehler ist aufgetreten: {e}"
+        return f"Dienst aktuell nicht erreichbar. Bitte später versuchen."
 
-# Ausführung
+# HTML Erstellung
 result_text = start_process()
-
-# HTML Template
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
-        h1 {{ color: #1a73e8; font-size: 1.5rem; margin-top: 0; }}
-        p {{ white-space: pre-wrap; }}
-        .footer {{ margin-top: 20px; font-size: 0.8rem; color: #888; border-top: 1px solid #eee; padding-top: 10px; }}
+        body {{ font-family: sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; justify-content: center; }}
+        .card {{ background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }}
+        h1 {{ color: #1a73e8; font-size: 1.4rem; margin-top: 0; border-bottom: 2px solid #e8f0fe; padding-bottom: 10px; }}
+        p {{ line-height: 1.6; color: #444; white-space: pre-wrap; }}
+        .date {{ font-size: 0.75rem; color: #999; margin-top: 20px; text-align: right; }}
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Täglich KI-News</h1>
+    <div class="card">
+        <h1>News Update: {TOPIC}</h1>
         <p>{result_text}</p>
-        <div class="footer">Aktualisiert am: {datetime.now().strftime('%d.%m.%Y %H:%M')}</div>
+        <div class="date">Aktualisiert: {datetime.now().strftime('%d.%m.%Y %H:%M')} Uhr</div>
     </div>
 </body>
 </html>
