@@ -143,7 +143,7 @@ html_content = f"""
             <span class="live-dot"></span>
             <div id="header-text-container">
                 <span id="h1" class="header-msg active">Talk?Now! News</span>
-                <span id="h2" class="header-msg">Aktuelle News zu Videopodcasts, Medien und unsere Shows</span>
+                <span id="h2" class="header-msg">Aktuelle News zu Videopodcasts, Medien und unseren Shows</span>
             </div>
         </div>
         <div id="progress-bar-container"><div id="progress-bar"></div></div>
