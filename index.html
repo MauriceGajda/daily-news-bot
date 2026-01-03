@@ -5,71 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { 
-            margin: 0; padding: 0; background: transparent; 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            overflow: hidden; height: 85px; 
-        }
-        
-        #podcast-news-widget {
-            width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 0px;
-            background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            height: 85px; box-sizing: border-box;
-        }
-
-        .ticker-header {
-            background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 5px 12px;
-            font-weight: bold; font-size: 13px; 
-            display: flex; align-items: center; 
-            height: 24px; position: relative; overflow: hidden;
-        }
-
+        body { margin: 0; padding: 0; background: transparent; font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; height: 85px; }
+        #podcast-news-widget { width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 0px; background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3); height: 85px; box-sizing: border-box; }
+        .ticker-header { background: rgb(255, 236, 192); color: rgb(0, 21, 56); padding: 5px 12px; font-weight: bold; font-size: 13px; display: flex; align-items: center; height: 24px; position: relative; overflow: hidden; }
         #header-text-container { position: relative; height: 100%; width: 100%; display: flex; align-items: center; }
-        
-        .header-msg {
-            position: absolute; width: 100%; transition: all 0.6s ease;
-            opacity: 0; transform: translateY(10px);
-        }
+        .header-msg { position: absolute; width: 100%; transition: all 0.6s ease; opacity: 0; transform: translateY(10px); }
         .header-msg.active { opacity: 1; transform: translateY(0); }
-
-        .live-dot {
-            height: 6px; width: 6px; background-color: #ff0000; border-radius: 50%;
-            margin-right: 8px; flex-shrink: 0; animation: pulse 2s infinite ease-in-out;
-        }
-
+        .live-dot { height: 6px; width: 6px; background-color: #ff0000; border-radius: 50%; margin-right: 8px; flex-shrink: 0; animation: pulse 2s infinite ease-in-out; }
         #progress-bar-container { width: 100%; height: 3px; background: rgba(0,0,0,0.2); }
-        #progress-bar { 
-            width: 0%; height: 100%; 
-            background: linear-gradient(to bottom, rgb(204, 189, 154) 0%, rgb(255, 236, 192) 100%); 
-        }
-
-        #feed-box {
-            padding: 4px 12px; height: 38px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-        }
-
-        .status-tag { 
-            color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; 
-            text-transform: uppercase; margin-bottom: 2px; 
-        }
-        
-        .news-text {
-            color: rgb(255, 236, 192); font-size: 13px; 
-            line-height: 1.2; margin: 0;
-            text-decoration: none; font-weight: bold; animation: fadeIn 0.5s;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block;
-        }
-
+        #progress-bar { width: 0%; height: 100%; background: linear-gradient(to bottom, rgb(204, 189, 154) 0%, rgb(255, 236, 192) 100%); }
+        #feed-box { padding: 4px 12px; height: 38px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .status-tag { color: rgb(255, 236, 192); opacity: 0.5; font-size: 9px; text-transform: uppercase; margin-bottom: 2px; }
+        .news-text { color: rgb(255, 236, 192); font-size: 13px; line-height: 1.2; margin: 0; text-decoration: none; font-weight: bold; animation: fadeIn 0.5s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block; }
         @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes progress { from { width: 0%; } to { width: 100%; } }
-
-        @media (max-width: 768px) {
-            .news-text { font-size: 15px; }
-            .ticker-header { font-size: 15px; height: 26px; }
-            .header-msg { font-size: 15px; }
-            .status-tag { font-size: 10px; }
-        }
+        @media (max-width: 768px) { .news-text { font-size: 15px; } .ticker-header { font-size: 15px; height: 26px; } .header-msg { font-size: 15px; } .status-tag { font-size: 10px; } }
     </style>
 </head>
 <body>
@@ -87,50 +38,33 @@
             <div id="content-container" style="width: 100%;"></div>
         </div>
     </div>
-
     <script>
-        const entries = [{"title": "Aktuelle Updates aus der Medienwelt.", "is_ai": true}, {"title": "Bagger-Alarm! Dieser Superstar hat Aleks Bechtel m\u00e4chtig angegraben", "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNZU1IV0pJOW9vRlRqbXRKZWVaWU4yb2hfU1ZYVkhCWTNuR00xaDVwUjBfZThldWFiUVplbnpKcUJrd0dpWGFZNlJQQkVlaXhsMi05b3I5ZzNyRVN1N3daUFFLX29ZMG5ydTFwXzJZS1k4ZkwyUjdDeUMycS1RZ2xaRkV0emUwdXlpWVhxY3pJOXJrR01JRmx1YmhDOFhJeHJUZVBhajhVYkp0UjJBMmxCTF8xNjJPaXZoT1RfWA?oc=5", "source": "RTL.de"}, {"title": "\"Kaulitz & Kaulitz 2\": The Return of the Leichtigkeit", "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQNG90N0QzNy1LY1RMRTU2QWh4UUtLNmxmTjZqcjZjdlZoQUZTX0NTWEhQTnJxLUxuUXBLOHdPU29NWUpQZEd5Ti1XRzB1YUpZX2VGekxpUXE1TjBPNktxcHFNdko4LWR4aHFnaGdDUWw2SmxtZ0ZsTkJzdGdNY2FOZ3YtejNmZ0sxeHFVTVFB?oc=5", "source": "DWDL"}, {"title": "RTL setzt Zusammenarbeit mit Maurice Gajda aus: Frauke-Petry-Tweet gef\u00e4lscht?", "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxOUGZYYjNaMVN0ZTZkaVNvejMtVzdVN1QtTjdoNU02UEZyVkI1Ym1xaTNpUWZFM2RZVC1oNEt3OEppeGJfS2QwdkNFOXpzaTFxTlBHejFJOXpJbVV5ZWE5NXAxbHFNWnM4clBKenZNZHpMMUR6anhXT25oQnlzVk5ndWhNZFZ1UjQxbW1WeUVPTWdYelg3TVlTcU1VMHFPdllfNV90dmtGQmRxSHlFRTVfRHlqNWx6YTJqSzBNTTV5QjRMaU5fcjJiRlFsdUdfa1ctMHQxbnQxcDRhd1FvMmQzLTV3?oc=5", "source": "Spiegel"}, {"title": "RTL trennt sich von Moderator Maurice Gajda: \"Verst\u00f6\u00dfe gegen die journalistische Sorgfaltspflicht\"", "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOWDhLR1ZXUjYyVE9SSi04bWd1Z1BCRDZjbDhPSmdqZWZDREZYY1RsSUJhdWlRNGEtT29raXRIdGI0eU9INzMtbjRZUHdySG5PaURzc2FRN293cGxVR2MyeUlSb2VuYTZfcmhaNGNLT2dlSmx0N3JXNjJiOWZ5enk4Q0tVSkhXbFExSG1RdHdCZmduTmxWMUE0RUFkX2hRc1dndmRLamdkOFF3bVR5THBNdEtR?oc=5", "source": "STERN.de"}, {"title": "\u201eDrag Slam\u201c feat. Bambi Mercury", "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1BZjE0czNueXJRQ3VhX0M4N280eXNScDNGNUFoamVCdFpOZjNIWV9VNHdFWjVuWEZ4Y1RqU0prcG5vcG9mWU9ta01qaHdfQm53cXhQOXJ0bllTRDJNeUhSejZFbHNRUUlQRXlFSWdsVTN3UQ?oc=5", "source": "maenner.media"}, {"title": "Nach gefaktem Frauke-Petry-Tweet: RTL trennt sich von Maurice Gajda", "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNUFVJZkNIbFNRV2tlWVVjTno3cjdOV0NOQ0F3d1d2Y0xqc1J1Mklyd2d4a2xsZG84OWxqWWR4MU01bm1nS29mWi00SElHQ01GV3IwbWQzazBaUWtjM1pwaHhzYjNFRjJxUVRLTzJLLXRRN3VSZ1VBRmk2UDBYU1M4eWxwVDVvTDB3Q2tsVXJLQW1WZTJkbklwYnlmUi00U25uZHhMVlRUZzNranp3UkNJN2VsbGlQdnZDQVdnSjEzc3BHWDFmNWgyMmxYVnB3SGln?oc=5", "source": "FAZ"}, {"title": "Petry-Tweet gef\u00e4lscht: RTL trennt sich von Moderator Maurice Gajda", "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNd29RWmFCVjhiLVhaRm80a1B6alMxSEVka1Y0aGFZWlktTzZPT0dFLWpjWXQ2Zjh0Nkh6SWo5V3VwNjA5V0hzYkhTcVpNRFMxSEpjZWFxZjRsWXM3N0pGYXBmS3lWUTdwbGNhdXZvZ285bndUTWhVMC1tV0djcU5TZ1hlSGU4cFlJYVhMWXd4MFJvR2FCLTBoTGdBNVBXT1VsOVkyRThCdEs2SlVvV0lNamZVU0lQcHZlMVhkaDNLdmZ0QdIB3gFBVV95cUxOdmJOOFRnLUF0WThPYklHeUR5TVNUVmtsMTNkT01iejRzMG1UOUQtS0NEMzdUaHIta0l0Z0RCR1RaR2d0NWhaRm5ObHdzYWxzYWowQjNHQk9uWHF4aTRrS2ZXVjZjM09JY0l5QnZ1X1hjSXZfSjhDZnhPN3g2RHE0U2F4QXV1d2lMWDZFUnY0NjFSOE9UbHRncmF3ZnVveEFGY2h2MFAyQ3dwM2pGYVZjVXRhUV9fc2FsS3pKRFg5bHY2NERzMXZUSHRQTUpYQnZscllITzZJckdpX2xVWkE?oc=5", "source": "RND.de"}, {"title": "Magdeburger Maurice Gajda fliegt bei RTL raus: \"Mit Grunds\u00e4tzen nicht vereinbar\"", "url": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxNdTloUk1kOHlEcHVpMXdCTjN3TVJkQjR2Vm44NVpJZ2dlVDFnM2g1YXhScWN0d0FqSHRQSmJTbC1teDFXQ3VlZlBmR1R4azJrOWp1Y3ZGUXVGdk85QUxWRkwyNnpRN2J3aExLek9Ba1Q4R2RjTkZkMVlZSWR5bmFVY3lzdXotM2RCWTlDTE42MlZzYm4tN1IyUGZ1M1ZwVDFNWFd2cUg5QmE0cWlfSlZpVTJkN011OW5MelhKS3JfT2xLYnNDQW04OWpaLTBkcFdKeWd0OEdEVQ?oc=5", "source": "Volksstimme"}, {"title": "Maurice Gajda macht Freund zwei Monate nach RTL-Skandal einen Antrag", "url": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOOHpBeDhsdjdQOVFiWmg2RkxsazcxMWpZdE1sYTZRd2Fyc2syMGppRVJESnk2U2lTVnpLUHdwS21DUkt6ckllSjR3Unp2TzVPV2FWQVlvNFJCYW91TjZ2UDhsMlE5blVGbHl2MV85aElRM2N1NFZvZDBPSTlmQ2hHckVUdzNfRUExTnNTcFFhdUxxMER3a2xhQ2ZMVUdfWjRqcUVlS2UyU3pjenJWWDk4NFZyQXRENjRoQXVqZzduOUs3ci1jMDFUNjNEdHRyMlZDMnJYY1NLaHBKODNoN1ZiVGZheE5nUQ?oc=5", "source": "FOCUS online"}, {"title": "Maurice Gajda Beziehung: Wer ist der Mann an seiner Seite?", "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNT2NZUkZqTEZRaEE1d01tRkVIQThZandmZkh2MzFWMm9XaDNOVWhxbHpPUWtROW9SLWVnWGY5UGZnZWZUMExPX3E3d2RyZ3RhMUhCSDBVSDFBdENWWHREbDN2RTFQcVFSbFBtTEhmZnQ1R19mTURCOVpHUXZteV9sRGJ0VzVZemdFa2xYTWNia1UzV0FmUi1rUEoxcGNmcE1I?oc=5", "source": "desired.de"}, {"title": "Maurice Gajda: Nach fristloser RTL-K\u00fcndigung bricht er sein Schweigen", "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxPV2JYS1R3Mnd0UWM1X1piM1pDM0dORWxtdUlMODFzWnVTQ1VUN0cyaTlWYjZ0dFZmbTNPQ2pycENwbFJ1WC1QZGFPeWhxZk5NSDFjZU91UGtpaUU1NnNhVmFuLVMtMnJfU2s3Tjl0QUJFWkhwYlA0WDNiTWxsalNhaTZkc0ZuazgtVUNjZE51Z2RDd1FUVG11NnZvUjNIM3F2SDIwS2JsVjBIRGJIQ1RpbDk1QVM4UnZweVFkTllYeXdENW5H?oc=5", "source": "OK! Magazin"}, {"title": "Ex-RTL-Moderator Maurice Gajda hat sich verlobt", "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOWk1uYk5SaVI2MENMenJ0dDlSb0RLLUY0U19jR016Y3NGeXdoQVMzekIzQXFxcDd5MjdDbkMySXQtTkgtbU9tUmFoM2lVc0RCM1lvY2JHWmh6N2t0cmhCbUN4cHREenpReGRNWXIzTExVeWxzRnltUGtXbExVanVmMGdyRXNjbUhMZkpJcHJMaUVfUXc?oc=5", "source": "Bunte.de"}, {"title": "Maurice Gajda und sein Mitch sind nun offiziell verheiratet", "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPMmxFdEZsdy1vV3V3S3ltWkd2WUxTNjNVMDdjdlJYUTlMSHBMQTRnQXktYzhid00xU1g4ZnBTZnpTZVpjTFlXRm9leGFXMnE2SFFpWXltRWRjZ253d3RYZk9nRWJaVW9fXzFuak9yNGNOVWJiMG1PLW5YTGZxekhMYWpVYkZKN2ZMajhRaFprUWhjemFSNFZTMWxEQjJjQTJpb0dCTzJ1QVI0UQ?oc=5", "source": "Promiflash"}, {"title": "Maurice Gajda: RTL pr\u00fcft rund hundert Beitr\u00e4ge von Ex-Reporter", "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQcXpCb2ZONmRSanZ1VXU1NWZYNnpySURMVmYwbWZmQWFqSldIcjEzRTA1OTZ4YXlxay1WamM2SEZvaWtPUF9UUjFLbGVwREMxWkh0NXVTUmkzaS13ZWtnUTFXQzNvbWh1TGxHYVNQY1l6b1REbHlNU3h1eDI4YXU0dlpYUFdhQzNEVUR0UWh2dFhGRWJ4QkEzWnl6U2JLNk5VbWd4WU5qVnFmVEdOSktXRmZ5bENTZWxEbS0ySm9wVEt0ZkhPSUN2UklMRDA?oc=5", "source": "Spiegel"}, {"title": "\"Irgendwann wurde ich w\u00fctend\"", "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOQ1VPbFZQdkRzZDNMUk1SUHp5LXdVQVJPMHo4Vk9XYkp6LVpzME9Bam9PcklFa18yN1J3VU1lOTdUQUYwWG0ycWUyN2RxdU5POHJjb0hYQ3B2Zi1NQ0dhVDl3WWlLZUZkZ1hlZ05SNjhjdVlybmZ6UEZQUmkyWC1sNE85WU9nYkJnMGtMc2dRWG5HbnJaMjFhSk1wWFFva0gyRlE?oc=5", "source": "STERN.de"}];
-        const updateTime = 1767459927514.424; 
+        const entries = [{"title": "Aktuelle Updates aus der Medienwelt.", "is_ai": true}, {"title": "Zwischenjahr f\u00fcr die Auswahl: DFB-Frauen 2026: WM-Quali und die Frage nach W\u00fccks Vertrag", "url": "https://www.tagesspiegel.de/sport/zwischenjahr-fur-die-auswahl-dfb-frauen-2026-wm-quali-und-die-frage-nach-wucks-vertrag-15095105.html", "source": "Der Tagesspiegel"}, {"title": "Zwischenjahr f\u00fcr die Auswahl: DFB-Frauen 2026: WM-Quali und die Frage nach W\u00fccks Vertrag", "url": "https://www.stern.de/sport/zwischenjahr-fuer-die-auswahl--dfb-frauen-2026--wm-quali-und-die-frage-nach-wuecks-vertrag-37005086.html", "source": "STERN.de"}, {"title": "Zwischenjahr f\u00fcr die Auswahl: DFB-Frauen 2026: WM-Quali und die Frage nach W\u00fccks Vertrag", "url": "https://www.zeit.de/news/2026-01/02/dfb-frauen-2026-wm-quali-und-die-frage-nach-wuecks-vertrag", "source": "Die Zeit"}, {"title": "Krankheitswelle nach den Feiertagen - Droht Silvester-Engpass bei Polizei und Feuerwehr?", "url": "https://www.bild.de/news/inland/grippewelle-droht-ein-silvester-engpass-bei-polizei-und-feuerwehr-695249c81fd60a92dfe20d3d", "source": "Bild"}, {"title": "Auf- und Absteiger 2025 - BILD-Ranking: Die Top- und Flop-Liste der Politik", "url": "https://www.bild.de/politik/inland/auf-und-absteiger-2025-bild-ranking-die-top-und-flop-liste-der-politik-694e86742ccd3a374d5368ba", "source": "Bild"}, {"title": "Kurz vor Weihnachten - Ausgeraubt! Mutter von 8 Kindern verzweifelt", "url": "https://www.bild.de/regional/berlin/brutaler-ueberfall-in-berlin-ausgeraubt-mutter-von-8-kindern-verzweifelt-6954f562f6fc544dba9b83fa", "source": "Bild"}, {"title": "Reichling: Drohen nun Enteignungen? Wie es bei der Gassuche weitergeht", "url": "https://www.sueddeutsche.de/bayern/bayern-reichling-ammersee-gasbohrung-li.3361183", "source": "S\u00fcddeutsche Zeitung"}, {"title": "Erdgasbohrung in Reichling: Drohen nun Enteignungen? Wie es bei der Gassuche weitergeht", "url": "https://www.stern.de/gesellschaft/regional/bayern/erdgasbohrung-in-reichling--drohen-nun-enteignungen--wie-es-bei-der-gassuche-weitergeht-36998468.html", "source": "STERN.de"}, {"title": "Prototyp mit Methanol-Antrieb - Dieses Auto ist gut f\u00fcrs Klima", "url": "https://www.bild.de/leben-wissen/auto/prototyp-mit-methanol-antrieb-dieses-auto-ist-gut-fuers-klima-6936e7fc9f2b81ad2aca08a2", "source": "Bild"}, {"title": "Dieses Auto f\u00e4hrt sogar klimapositiv", "url": "https://www.autobild.de/artikel/umgebauter-tesla-als-prototyp-mit-methanol-antrieb-28457857.html", "source": "Autobild.de"}, {"title": "\u201eDie Bundesarbeitsministerin hat dem Mittelstand in Deutschland den Krieg erkl\u00e4rt\u201c", "url": "https://www.welt.de/politik/deutschland/article6950084ff6fc544dba9b4ead/kritik-an-baerbel-bas-die-bundesarbeitsministerin-hat-dem-mittelstand-in-deutschland-den-krieg-erklaert.html", "source": "DIE WELT"}, {"title": "Die politischen Aufsteiger und Absteiger des Jahres: Wer au\u00dfer Habeck noch verlor \u2013 und wer gewann", "url": "https://www.tagesspiegel.de/politik/die-politischen-aufsteiger-und-absteiger-des-jahres-wer-ausser-habeck-noch-verlor--und-wer-gewann-15081422.html", "source": "Der Tagesspiegel"}, {"title": "Wetten, dass Sie Backpapier noch nie so smart genutzt haben?", "url": "https://www.chip.de/news/haushalt-garten/wetten-dass-sie-backpapier-noch-nie-so-smart-genutzt-haben_a62bfb47-b4af-4d45-bf11-fcb6c838dfe4.html", "source": "CHIP Online Deutschland"}, {"title": "Vorschau: TV-Tipps am Mittwoch", "url": "https://www.stern.de/kultur/vorschau--tv-tipps-am-mittwoch-36989346.html", "source": "STERN.de"}, {"title": "Soziales: Zwischen Notunterkunft und Neuanfang: Frauen erz\u00e4hlen", "url": "https://www.stern.de/gesellschaft/regional/hessen/soziales--zwischen-notunterkunft-und-neuanfang--frauen-erzaehlen-36989172.html", "source": "STERN.de"}, {"title": "\u201eDie Situation kann jederzeit kippen\u201c: Kinderkrankenpflegerin Saskia Zimmermann k\u00fcmmert sich an Weihnachten um die Allerkleinsten", "url": "https://www.tagesspiegel.de/potsdam/landeshauptstadt/die-situation-kann-jederzeit-kippen-kinderkrankenpflegerin-saskia-zimmermann-kummert-sich-an-weihnachten-um-die-allerkleinsten-15044247.html", "source": "Der Tagesspiegel"}, {"title": "Saskia Esken: \"Angela Merkel und ich haben eine Menge Dinge zu besprechen\"", "url": "https://www.zeit.de/politik/deutschland/2025-12/saskia-esken-spd-parteivorsitz-frauen-anfeindungen", "source": "Die Zeit"}, {"title": "\"Alle Jahre wieder\": Im Fernbus zum Fest: Charly H\u00fcbner wird zum weihnachtlichen Busfahrer", "url": "https://www.stern.de/kultur/tv/im-fernbus-zum-fest--charly-huebner-wird-zum-weihnachtlichen-busfahrer-36980396.html", "source": "STERN.de"}, {"title": "Verlorene Kulturorte: Die Galerie Samtleben holte 1990 Kunst in Potsdams Mitte", "url": "https://www.tagesspiegel.de/verlorene-kulturorte-die-galerie-samtleben-holte-1990-kunst-in-potsdams-mitte-15045121.html", "source": "Der Tagesspiegel"}, {"title": "Nuhr pr\u00fcgelt im TV auf Deutschland ein, bei Israel wird Beifall pl\u00f6tzlich leise", "url": "https://www.focus.de/kultur/kino-tv/nuhr-pruegelt-im-tv-auf-deutschland-ein-bei-israel-wird-beifall-ploetzlich-leise_4a5b539f-b1e4-436f-b5ce-c5b760cad791.html", "source": "Focus"}];
+        const updateTime = 1767460595270.8992; 
         let currentIndex = 0;
-        
         const box = document.getElementById('content-container');
         const status = document.getElementById('status');
         const bar = document.getElementById('progress-bar');
-        
         const h1 = document.getElementById('h1');
         const h2 = document.getElementById('h2');
         setInterval(() => {
-            if(h1.classList.contains('active')) {
-                h1.classList.remove('active'); h2.classList.add('active');
-            } else {
-                h2.classList.remove('active'); h1.classList.add('active');
-            }
+            if(h1.classList.contains('active')) { h1.classList.remove('active'); h2.classList.add('active'); }
+            else { h2.classList.remove('active'); h1.classList.add('active'); }
         }, 4000);
-
         function getTimeAgo() {
             const diff = Math.floor((Date.now() - updateTime) / 60000);
             if (diff < 1) return "Gerade eben";
             return `Vor ${diff} Min.`;
         }
-
         function showNext() {
             const entry = entries[currentIndex];
-            bar.style.animation = 'none';
-            bar.offsetHeight; 
+            bar.style.animation = 'none'; bar.offsetHeight; 
             bar.style.animation = 'progress 3.5s linear forwards';
-
             const timeLabel = getTimeAgo();
             status.innerText = entry.is_ai ? `KI-Fokus | ${timeLabel}` : `${entry.source} | ${timeLabel}`;
-            
-            if (entry.url) {
-                box.innerHTML = `<a href="${entry.url}" target="_blank" class="news-text">${entry.title}</a>`;
-            } else {
-                box.innerHTML = `<p class="news-text">${entry.title}</p>`;
-            }
-
+            box.innerHTML = entry.url !== "#" ? `<a href="${entry.url}" target="_blank" class="news-text">${entry.title}</a>` : `<p class="news-text">${entry.title}</p>`;
             currentIndex = (currentIndex + 1) % entries.length;
         }
-
         setInterval(showNext, 3500);
         showNext();
     </script>
