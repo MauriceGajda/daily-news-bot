@@ -6,23 +6,31 @@ from datetime import datetime
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- DEINE PERSONEN-LISTE ---
-PERSONEN = [
-    "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", 
-    "Annabelle Mandeng", "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", 
-    "Maurice Gajda", "Charlet C. House", "Gino Bormann", "Chenoa", "Saskia", 
-    "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", "Dieter Könnes", 
-    "Ewa De Lubomirz", "Fynn Kliemann", "Hannes", "Babo", "Jim Krawall", 
-    "Julian F.M. Stoeckel", "Jurassica Parka", "Margot Schlönzke", "Meryl Deep", 
-    "Michael Gajda", "Ridal Carel Tchoukuegno", "Sandra Kuhn"
+# --- DEINE KOMBINIERTE LISTE (Personen & Shows) ---
+SUCH_BEGRIFFE = [
+    "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
+    "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
+    "Gino Bormann", "Chenoa", "Saskia", "Cherin", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
+    "Dieter Könnes", "Ewa De Lubomirz", "Fynn Kliemann", "Hannes", "Babo", "Jim Krawall", 
+    "Julian F.M. Stoeckel", "Jurassica Parka", "Margot Schlönzke", "Meryl Deep", "Michael Gajda", 
+    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia", 
+    "Family Affairs", "lemondreams", "German Humour", "Democracy Now!", "Aktivkohle", 
+    "Bart & Schnauze", "Cineolux", "Talk? Now! News", "Tagebuch einer Dragqueen", 
+    "Überdosis Crime", "Talk Now News Reality", "Übers Podcasten", "Schöne Dinge", 
+    "Big Names Only", "Robin Gut", "Catch Me If You Speak", "TMDA", "Jein!", 
+    "Stoeckel & Krawall", "Parka & Schlönzke", "Margots Kochtalk", "Margots Schattenkabinett", 
+    "Meryl Deep Talk", "Dachboden Revue", "Never Meet Your Idols", "Redlektion", 
+    "Gamer By Heart", "Base Talk", "Interior Intim", "Süß & Leiwand", "Busenfreundin", 
+    "MGMB", "Gschichten aus der Schwulenbar", "Machgeschichten", "Celebrate Organizations", 
+    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht"
 ]
 
-# Erstellt die Suchanfrage: "Name 1" OR "Name 2" OR ...
-SUCH_QUERY = " OR ".join([f'"{p}"' for p in PERSONEN])
+# Erstellt die Suchanfrage mit exakten Phrasen
+SUCH_QUERY = " OR ".join([f'"{b}"' for b in SUCH_BEGRIFFE])
 
 def start_process():
-    # Suche in deutschen News, begrenzt auf die letzten 8 Treffer für bessere Übersicht
-    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=8&apiKey={NEWS_KEY}"
+    # Suche in deutschen News (pageSize auf 10 erhöht für mehr Trefferpotenzial)
+    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=10&apiKey={NEWS_KEY}"
     
     try:
         r = requests.get(news_url)
@@ -30,7 +38,7 @@ def start_process():
         articles = news_data.get('articles', [])
         
         if not articles:
-            return "Aktuell gibt es keine neuen Pressemeldungen zu den gewählten Personen."
+            return "Aktuell gibt es keine neuen Meldungen zu den Personen oder Podcast-Shows in deiner Liste."
         
         headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
         text_to_summarize = " \n".join(headlines)
@@ -38,7 +46,7 @@ def start_process():
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
         
         payload = {
-            "contents": [{"parts": [{"text": f"Fasse die wichtigsten News zu diesen Personen kurz in 3-4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
+            "contents": [{"parts": [{"text": f"Fasse die wichtigsten News zu diesen Personen und Podcasts kurz in 3-4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
         }
         
         headers = {'Content-Type': 'application/json'}
@@ -51,7 +59,7 @@ def start_process():
             # FALLBACK: Liste mit anklickbaren Links
             fallback_html = "Zusammenfassung aktuell nicht verfügbar. Hier sind die neuesten Schlagzeilen:<br><br>"
             for a in articles:
-                fallback_html += f"• <a href='{a['url']}' target='_blank' style='color: #1a73e8; text-decoration: none;'>{a['title']}</a> ({a['source']['name']})<br><br>"
+                fallback_html += f"• <a href='{a['url']}' target='_blank' style='color: #1a73e8; text-decoration: none; font-weight: 500;'>{a['title']}</a> ({a['source']['name']})<br><br>"
             return fallback_html
 
     except Exception as e:
@@ -66,18 +74,18 @@ html_content = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: -apple-system, sans-serif; background-color: #f8f9fa; padding: 20px; display: flex; justify-content: center; }}
-        .card {{ background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 600px; width: 100%; border-top: 5px solid #1a73e8; }}
-        h1 {{ color: #1a73e8; font-size: 1.2rem; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }}
-        .content {{ line-height: 1.7; color: #333; }}
-        .date {{ font-size: 0.7rem; color: #aaa; margin-top: 25px; text-align: center; font-style: italic; border-top: 1px solid #eee; padding-top: 10px; }}
+        body {{ font-family: -apple-system, system-ui, sans-serif; background-color: #f4f7f9; padding: 20px; display: flex; justify-content: center; }}
+        .card {{ background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.06); max-width: 600px; width: 100%; border-left: 6px solid #e91e63; }}
+        h1 {{ color: #333; font-size: 1.3rem; margin-top: 0; letter-spacing: -0.5px; }}
+        .content {{ line-height: 1.8; color: #444; font-size: 1.05rem; }}
+        .date {{ font-size: 0.75rem; color: #999; margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }}
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>People Tracker Update</h1>
+        <h1>Show & People Tracker</h1>
         <div class="content">{result_text}</div>
-        <div class="date">Letztes Update am {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
+        <div class="date">Letztes Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
     </div>
 </body>
 </html>
