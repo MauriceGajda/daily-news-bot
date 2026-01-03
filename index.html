@@ -10,7 +10,7 @@
         #podcast-news-widget {
             width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 8px;
             background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            max-height: 85px; /* Reduzierte Höhe um ca. 40% */
+            max-height: 85px;
         }
 
         .ticker-header {
@@ -52,7 +52,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes progress { from { width: 0%; } to { width: 100%; } }
 
-        /* Mobile Optimization */
         @media (max-width: 480px) {
             .news-text { font-size: 10px; }
             .header-msg { font-size: 10px; }
@@ -77,23 +76,30 @@
 
     <script>
         const entries = [{"title": "Aktuelle Updates aus der Medienwelt.", "is_ai": true}, {"title": "SZ-Podcast \u201eAuf den Punkt\u201c: Crans-Montana: Wieso konnten so wenige Menschen fliehen?", "url": "https://www.sueddeutsche.de/panorama/crans-montana-brand-bar-todesopfer-podcast-li.3362243", "source": "S\u00fcddeutsche Zeitung"}, {"title": "Ja, er lebt noch! Was aus dem RTL-Wald in der Eifel geworden ist", "url": "https://www.dwdl.de/magazin/104286/ja_er_lebt_noch_was_aus_dem_rtlwald_in_der_eifel_geworden_ist/", "source": "Dwdl.de"}, {"title": "Brand in Schweizer Skiort: \"Eine der schlimmsten Trag\u00f6dien\" in der Schweizer Geschichte", "url": "https://www.zeit.de/politik/2026-01/brandkatastrophe-schweiz-crans-montana-bar-silvester-nachrichtenpodcast", "source": "Die Zeit"}, {"title": "Replay: Dieser Pop-Hit klingt nach Vivaldi und mehr: Wir analysieren Rosal\u00edas \u201eBerghain\u201c", "url": "https://www.diepresse.com/20437831/replay-dieser-pop-hit-klingt-nach-vivaldi-und-mehr-wir-analysieren", "source": "Diepresse.com"}, {"title": "SZ-Podcast \u201eAuf den Punkt\u201c: 2025: Wie war Merz' erstes Kanzler-Jahr?", "url": "https://www.sueddeutsche.de/politik/merz-rueckblick-kanzler-jahr-berlin-li.3359059", "source": "S\u00fcddeutsche Zeitung"}, {"title": "Die Filme, auf die wir uns 2026 am meisten freuen", "url": "https://fm4.orf.at/stories/3051565/", "source": "Fm4.orf.at"}, {"title": "Streaming-Tipps des Jahres: Von \"Adolescence\" bis Haftbefehl: Diese Serien m\u00fcssen sie 2025 gesehen haben", "url": "https://www.stern.de/kultur/tv/von--adolescence--bis-haftbefehl--diese-serien-muessen-sie-2025-gesehen-haben-36997400.html", "source": "STERN.de"}, {"title": "2,20 Euro Stundenlohn \u2013 Wie deutsche Unternehmer mit Inklusion exklusive Profite machen", "url": "https://www.nachdenkseiten.de/?p=143731", "source": "Nachdenkseiten.de"}, {"title": "\u00dcberall Kriege und Krisen: Was gibt's da noch zu lachen?", "url": "https://www.faz.net/aktuell/feuilleton/debatten/worueber-kuenstler-in-krisen-und-kriegen-noch-lachen-accg-200382554.html", "source": "Faz.net"}, {"title": "PC Games Podcast #200: Unsere gro\u00dfe Jubil\u00e4umsfolge mit vielen G\u00e4sten", "url": "https://www.pcgames.de/PC-Games-Podcast-Brands-279138/News/Jubilaeum-Gaeste-Spiele-Talk-Diskussion-1488788/", "source": "PC Games"}];
+        const updateTime = 1767457010998.8179; 
         let currentIndex = 0;
+        
         const box = document.getElementById('content-container');
         const status = document.getElementById('status');
         const bar = document.getElementById('progress-bar');
         
-        // Header Wechsel Logik
+        // Header Wechsel
         const h1 = document.getElementById('h1');
         const h2 = document.getElementById('h2');
         setInterval(() => {
             if(h1.classList.contains('active')) {
-                h1.classList.remove('active');
-                h2.classList.add('active');
+                h1.classList.remove('active'); h2.classList.add('active');
             } else {
-                h2.classList.remove('active');
-                h1.classList.add('active');
+                h2.classList.remove('active'); h1.classList.add('active');
             }
         }, 4000);
+
+        function getTimeAgo() {
+            const diff = Math.floor((Date.now() - updateTime) / 60000);
+            if (diff < 1) return "Gerade eben aktualisiert";
+            if (diff === 1) return "Vor 1 Minute aktualisiert";
+            return `Vor ${diff} Minuten aktualisiert`;
+        }
 
         function showNext() {
             const entry = entries[currentIndex];
@@ -101,7 +107,8 @@
             bar.offsetHeight; 
             bar.style.animation = 'progress 3.5s linear forwards';
 
-            status.innerText = entry.is_ai ? "KI-Fokus | 16:13" : (entry.source + " | 16:13");
+            const timeLabel = getTimeAgo();
+            status.innerText = entry.is_ai ? `KI-Fokus | ${timeLabel}` : `${entry.source} | ${timeLabel}`;
             
             if (entry.url) {
                 box.innerHTML = `<a href="${entry.url}" target="_blank" class="news-text">${entry.title}</a>`;
