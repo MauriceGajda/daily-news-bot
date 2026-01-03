@@ -46,10 +46,10 @@ def start_process():
     if not articles:
         return [], "Keine News", status
 
-    # KI Zusammenfassung (Extra kurz für flachen Ticker)
+    # KI Zusammenfassung (Extra kurz)
     headlines_text = " \n".join([a['title'] for a in articles[:5]])
     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 15 Wörtern zusammen:\n\n{headlines_text}"}]}]}
+    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_text}"}]}]}
     
     summary = "Aktuelle Updates aus der Medienwelt."
     try:
@@ -65,9 +65,12 @@ def start_process():
     return ticker_data, status
 
 ticker_entries, search_status = start_process()
-timestamp = datetime.now().strftime('%H:%M')
 
-# --- HTML MIT FLACHEM DESIGN & HEADER-WECHSEL ---
+# --- NEU: ZEITLOGIK FÜR DEN TICKER ---
+# Wir speichern die aktuelle Zeit als Timestamp für JavaScript
+now_ts = datetime.now().timestamp() * 1000 
+
+# --- HTML MIT DYNAMISCHER ZEITANZEIGE ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -80,7 +83,7 @@ html_content = f"""
         #podcast-news-widget {{
             width: 100%; border: 1px solid rgb(255, 236, 192); border-radius: 8px;
             background: rgb(0, 21, 56); overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-            max-height: 85px; /* Reduzierte Höhe um ca. 40% */
+            max-height: 85px;
         }}
 
         .ticker-header {{
@@ -122,7 +125,6 @@ html_content = f"""
         @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(2px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         @keyframes progress {{ from {{ width: 0%; }} to {{ width: 100%; }} }}
 
-        /* Mobile Optimization */
         @media (max-width: 480px) {{
             .news-text {{ font-size: 10px; }}
             .header-msg {{ font-size: 10px; }}
@@ -147,23 +149,30 @@ html_content = f"""
 
     <script>
         const entries = {json.dumps(ticker_entries)};
+        const updateTime = {now_ts}; 
         let currentIndex = 0;
+        
         const box = document.getElementById('content-container');
         const status = document.getElementById('status');
         const bar = document.getElementById('progress-bar');
         
-        // Header Wechsel Logik
+        // Header Wechsel
         const h1 = document.getElementById('h1');
         const h2 = document.getElementById('h2');
         setInterval(() => {{
             if(h1.classList.contains('active')) {{
-                h1.classList.remove('active');
-                h2.classList.add('active');
+                h1.classList.remove('active'); h2.classList.add('active');
             }} else {{
-                h2.classList.remove('active');
-                h1.classList.add('active');
+                h2.classList.remove('active'); h1.classList.add('active');
             }}
         }}, 4000);
+
+        function getTimeAgo() {{
+            const diff = Math.floor((Date.now() - updateTime) / 60000);
+            if (diff < 1) return "Gerade eben aktualisiert";
+            if (diff === 1) return "Vor 1 Minute aktualisiert";
+            return `Vor ${{diff}} Minuten aktualisiert`;
+        }}
 
         function showNext() {{
             const entry = entries[currentIndex];
@@ -171,7 +180,8 @@ html_content = f"""
             bar.offsetHeight; 
             bar.style.animation = 'progress 3.5s linear forwards';
 
-            status.innerText = entry.is_ai ? "KI-Fokus | {timestamp}" : (entry.source + " | {timestamp}");
+            const timeLabel = getTimeAgo();
+            status.innerText = entry.is_ai ? `KI-Fokus | ${{timeLabel}}` : `${{entry.source}} | ${{timeLabel}}`;
             
             if (entry.url) {{
                 box.innerHTML = `<a href="${{entry.url}}" target="_blank" class="news-text">${{entry.title}}</a>`;
