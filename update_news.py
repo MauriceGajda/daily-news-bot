@@ -6,7 +6,7 @@ from datetime import datetime
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- DEINE OPTIMIERTE SUCHLISTE ---
+# --- DEINE OPTIMIERTE SUCHLISTE (Personen, Shows & Keywords) ---
 SUCH_BEGRIFFE = [
     "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
     "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
@@ -23,32 +23,32 @@ SUCH_BEGRIFFE = [
     "Gamer By Heart", "Base Talk", "Interior Intim", "Süß & Leiwand", "Busenfreundin", 
     "MGMB", "Gschichten aus der Schwulenbar", "Machgeschichten", "Celebrate Organizations", 
     "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht",
-    "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!"
+    "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!",
+    "Podcast", "Podcasts"
 ]
 
-# Suchanfrage erstellen
+# Suchanfrage mit Anführungszeichen für Exaktheit
 SUCH_QUERY = " OR ".join([f'"{b}"' for b in SUCH_BEGRIFFE])
 
 def start_process():
-    # Wir suchen global (ohne language=de), um alles zu finden
-    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
+    # Suche auf Deutsch (language=de)
+    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
     
     try:
         r = requests.get(news_url)
         news_data = r.json()
         articles = news_data.get('articles', [])
         
+        # Fallback-Suche, falls die exakte Suche (mit "") zu leer ist
         if not articles:
-            # Falls mit Anführungszeichen nichts gefunden wird, suchen wir etwas lockerer
-            lockere_suche = " OR ".join(SUCH_BEGRIFFE[:10]) # Top 10 Begriffe locker
-            news_url = f"https://newsapi.org/v2/everything?q={lockere_suche}&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
+            lockere_suche = " OR ".join(SUCH_BEGRIFFE[:20]) 
+            news_url = f"https://newsapi.org/v2/everything?q={lockere_suche}&language=de&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
             r = requests.get(news_url)
             articles = r.json().get('articles', [])
 
         if not articles:
-            return "Aktuell keine neuen Schlagzeilen zu den Shows oder Personen gefunden."
+            return "Aktuell keine neuen deutschen Schlagzeilen zu den Shows, Personen oder dem Thema Podcasts gefunden."
 
-        # Schlagzeilen für die KI aufbereiten
         headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
         text_to_summarize = " \n".join(headlines)
 
@@ -56,7 +56,7 @@ def start_process():
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
         
         payload = {
-            "contents": [{"parts": [{"text": f"Du bist ein Medien-Experte. Fasse diese News zu Podcasts und Medien-Persönlichkeiten in 4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
+            "contents": [{"parts": [{"text": f"Fasse diese News zu deutschen Podcasts und Medien-Persönlichkeiten in 4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
         }
         
         headers = {'Content-Type': 'application/json'}
@@ -66,8 +66,8 @@ def start_process():
         if "candidates" in res_json:
             return res_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            # Fallback: Liste mit Links
-            html = "<b>Aktuelle Fundstücke:</b><br><br>"
+            # Fallback Link-Liste
+            html = "<b>Aktuelle Fundstücke (Podcast-News):</b><br><br>"
             for a in articles[:8]:
                 html += f"• <a href='{a['url']}' target='_blank' style='color: #e91e63; text-decoration: none; font-weight: 500;'>{a['title']}</a><br><br>"
             return html
@@ -94,9 +94,9 @@ html_content = f"""
 </head>
 <body>
     <div class="card">
-        <h1>Show & People Tracker</h1>
+        <h1>Show & People Tracker (DE)</h1>
         <div class="content">{result_text}</div>
-        <div class="date">Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
+        <div class="date">Letztes Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
     </div>
 </body>
 </html>
