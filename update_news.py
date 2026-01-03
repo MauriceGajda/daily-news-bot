@@ -6,7 +6,7 @@ from datetime import datetime
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- DEINE KOMBINIERTE LISTE (Personen & Shows) ---
+# --- DEINE OPTIMIERTE SUCHLISTE ---
 SUCH_BEGRIFFE = [
     "Aleks Bechtel", "Alex Schwabe", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
     "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", 
@@ -22,15 +22,16 @@ SUCH_BEGRIFFE = [
     "Meryl Deep Talk", "Dachboden Revue", "Never Meet Your Idols", "Redlektion", 
     "Gamer By Heart", "Base Talk", "Interior Intim", "Süß & Leiwand", "Busenfreundin", 
     "MGMB", "Gschichten aus der Schwulenbar", "Machgeschichten", "Celebrate Organizations", 
-    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht"
+    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht",
+    "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!"
 ]
 
-# Erstellt die Suchanfrage mit exakten Phrasen
+# Suchanfrage erstellen
 SUCH_QUERY = " OR ".join([f'"{b}"' for b in SUCH_BEGRIFFE])
 
 def start_process():
-    # Suche in deutschen News (pageSize auf 10 erhöht für mehr Trefferpotenzial)
-    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&language=de&sortBy=publishedAt&pageSize=10&apiKey={NEWS_KEY}"
+    # Wir suchen global (ohne language=de), um alles zu finden
+    news_url = f"https://newsapi.org/v2/everything?q={SUCH_QUERY}&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
     
     try:
         r = requests.get(news_url)
@@ -38,15 +39,24 @@ def start_process():
         articles = news_data.get('articles', [])
         
         if not articles:
-            return "Aktuell gibt es keine neuen Meldungen zu den Personen oder Podcast-Shows in deiner Liste."
-        
+            # Falls mit Anführungszeichen nichts gefunden wird, suchen wir etwas lockerer
+            lockere_suche = " OR ".join(SUCH_BEGRIFFE[:10]) # Top 10 Begriffe locker
+            news_url = f"https://newsapi.org/v2/everything?q={lockere_suche}&sortBy=publishedAt&pageSize=5&apiKey={NEWS_KEY}"
+            r = requests.get(news_url)
+            articles = r.json().get('articles', [])
+
+        if not articles:
+            return "Aktuell keine neuen Schlagzeilen zu den Shows oder Personen gefunden."
+
+        # Schlagzeilen für die KI aufbereiten
         headlines = [f"{a['title']} ({a['source']['name']})" for a in articles]
         text_to_summarize = " \n".join(headlines)
 
+        # Gemini 1.5 Flash für die Zusammenfassung
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
         
         payload = {
-            "contents": [{"parts": [{"text": f"Fasse die wichtigsten News zu diesen Personen und Podcasts kurz in 3-4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
+            "contents": [{"parts": [{"text": f"Du bist ein Medien-Experte. Fasse diese News zu Podcasts und Medien-Persönlichkeiten in 4 Sätzen auf Deutsch zusammen:\n\n{text_to_summarize}"}]}]
         }
         
         headers = {'Content-Type': 'application/json'}
@@ -56,14 +66,14 @@ def start_process():
         if "candidates" in res_json:
             return res_json['candidates'][0]['content']['parts'][0]['text']
         else:
-            # FALLBACK: Liste mit anklickbaren Links
-            fallback_html = "Zusammenfassung aktuell nicht verfügbar. Hier sind die neuesten Schlagzeilen:<br><br>"
-            for a in articles:
-                fallback_html += f"• <a href='{a['url']}' target='_blank' style='color: #1a73e8; text-decoration: none; font-weight: 500;'>{a['title']}</a> ({a['source']['name']})<br><br>"
-            return fallback_html
+            # Fallback: Liste mit Links
+            html = "<b>Aktuelle Fundstücke:</b><br><br>"
+            for a in articles[:8]:
+                html += f"• <a href='{a['url']}' target='_blank' style='color: #e91e63; text-decoration: none; font-weight: 500;'>{a['title']}</a><br><br>"
+            return html
 
     except Exception as e:
-        return f"Fehler beim Abrufen der Daten."
+        return f"Dienst kurzzeitig im Standby."
 
 # HTML Layout
 result_text = start_process()
@@ -76,16 +86,17 @@ html_content = f"""
     <style>
         body {{ font-family: -apple-system, system-ui, sans-serif; background-color: #f4f7f9; padding: 20px; display: flex; justify-content: center; }}
         .card {{ background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 25px rgba(0,0,0,0.06); max-width: 600px; width: 100%; border-left: 6px solid #e91e63; }}
-        h1 {{ color: #333; font-size: 1.3rem; margin-top: 0; letter-spacing: -0.5px; }}
-        .content {{ line-height: 1.8; color: #444; font-size: 1.05rem; }}
+        h1 {{ color: #333; font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .content {{ line-height: 1.8; color: #444; font-size: 1.05rem; white-space: pre-wrap; }}
         .date {{ font-size: 0.75rem; color: #999; margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }}
+        a {{ color: #e91e63; text-decoration: none; }}
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Show & People Tracker</h1>
         <div class="content">{result_text}</div>
-        <div class="date">Letztes Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
+        <div class="date">Update: {datetime.now().strftime('%d.%m.%Y um %H:%M')} Uhr</div>
     </div>
 </body>
 </html>
