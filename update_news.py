@@ -4,38 +4,27 @@ import json
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import email.utils
+import random
 
+# API Keys aus Umgebungsvariablen
 NEWS_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- KLAR GETRENNTE LISTEN ---
-
-# Nur diese Namen werden bei Google News gesucht:
+# --- LISTEN ---
 PROMI_NAMEN = [
     "Aleks Bechtel", "Alex Schwabe", "Yvonne Mouhlen", "Aaron Breyer", "Amalie Gölthenboth", "Amy Goodman", "Annabelle Mandeng", 
     "Bambi Mercury", "Britta Kühlmann", "Britta Schewe", "Maurice Gajda", "Charlet C. House", "Daniel Zobel",
     "Gino Bormann", "Chenoa Überdosis Crime", "Saskia Überdosis Crime", "Cherin El Masri", "Chris Guse", "Daniel Budiman", "Ingo Meß", 
     "Dieter Könnes", "Ewa De Lubomirz", "Fynn Kliemann", "Hannes MBGM", "Babo MGMB", "Jim Krawall", 
     "Julian F.M. Stoeckel", "Margot Schlönzke", "Meryl Deep", "Michael Gajda", 
-    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Aaron Breyer", "Julia Krüger"
+    "Ridal Carel Tchoukuegno", "Sandra Kuhn", "Mischa Lorenz", "Julia Krüger"
 ]
 
-# Diese Begriffe werden NUR in der News-API gesucht:
-ALLGEMEINE_THEMEN = [
-    "Family Affairs", "lemondreams", "German Humour", "Democracy Now!", "Aktivkohle", "Einfach Leben",
-    "Bart & Schnauze", "Cineolux", "Talk? Now! News", "Tagebuch einer Dragqueen", 
-    "Überdosis Crime", "Talk Now News Reality", "Übers Podcasten", "Schöne Dinge", 
-    "Big Names Only", "Robin Gut", "Catch Me If You Speak", "TMDA", "Jein!", 
-    "Stoeckel & Krawall", "Parka & Schlönzke", "Margots Kochtalk", "Margots Schattenkabinett", 
-    "Meryl Deep Talk", "Dachboden Revue", "Never Meet Your Idols", "Redlektion", 
-    "Gamer By Heart", "Base Talk", "Interior Intim", "Süß & Leiwand", "Busenfreundin", 
-    "MGMB", "Gschichten aus der Schwulenbar", "Machgeschichten", "Celebrate Organizations", 
-    "College Corner", "Musste Machen", "Champagner & Chaos", "Leben reicht",
-    "Videopodcast", "Videopodcasts", "Talk Now", "TalkNow", "Talk?Now!", "Podcast", "Podcasts"
-]
+ALLGEMEINE_THEMEN = ["Videopodcast", "Medien", "Entertainment", "Podcast", "Show"]
 
 def fetch_news_api(query):
-    url = f"https://newsapi.org/v2/everything?q={query}&language=de&sortBy=publishedAt&pageSize=20&apiKey={NEWS_KEY}"
+    if not NEWS_KEY: return []
+    url = f"https://newsapi.org/v2/everything?q={query}&language=de&sortBy=publishedAt&pageSize=15&apiKey={NEWS_KEY}"
     try:
         r = requests.get(url, timeout=10)
         return r.json().get('articles', [])
@@ -55,63 +44,58 @@ def fetch_google_news(query):
                 title = item.find('title').text
                 clean_title = title.split(" - ")[0]
                 source_name = title.split(" - ")[-1] if " - " in title else "Google News"
-                google_articles.append({'title': clean_title, 'url': item.find('link').text, 'source': {'name': source_name}})
-                if len(google_articles) >= 15: break
+                google_articles.append({
+                    'title': clean_title, 
+                    'url': item.find('link').text, 
+                    'source': {'name': source_name}
+                })
+                if len(google_articles) >= 10: break
     except: pass
     return google_articles
 
 def start_process():
-    # Google News bekommt NUR die Namen
-    google_query = " OR ".join([f'"{n}"' for n in PROMI_NAMEN])
+    # Wir mischen die Namen, um bei jedem Lauf andere News zu erhalten
+    selected_promis = random.sample(PROMI_NAMEN, 5)
+    # Kurze, saubere Query für maximale API-Akzeptanz
+    query_string = " OR ".join([f'"{n}"' for n in selected_promis])
     
-    # News-API bekommt alles kombiniert
-    full_list = PROMI_NAMEN + ALLGEMEINE_THEMEN
-    api_query = " OR ".join([f'"{t}"' for t in full_list[:30]]) # Begrenzung auf 30 Begriffe für API Stabilität
+    api_results = fetch_news_api(query_string)
+    google_results = fetch_google_news(query_string)
     
-    api_results = fetch_news_api(api_query)
-    google_results = fetch_google_news(google_query)
+    combined = api_results + google_results
     
-    # Mixen (2:1)
-    combined = []
-    api_idx = 0
-    google_idx = 0
-    while api_idx < len(api_results) or google_idx < len(google_results):
-        for _ in range(2):
-            if api_idx < len(api_results):
-                combined.append(api_results[api_idx])
-                api_idx += 1
-        if google_idx < len(google_results):
-            combined.append(google_results[google_idx])
-            google_idx += 1
-
+    # Backup, falls die Promi-Suche leer ist
     if not combined:
-        combined = fetch_google_news("Videopodcast")
+        backup_query = random.choice(ALLGEMEINE_THEMEN)
+        combined = fetch_google_news(backup_query)
         status_text = "Backup-Modus"
     else:
         status_text = "Personalisiert"
 
-    # KI-Zusammenfassung
-    headlines_for_ai = " \n".join([a['title'] for a in combined[:8]])
-    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
-    payload = {"contents": [{"parts": [{"text": f"Fasse kurz in MAXIMAL 12 Wörtern zusammen:\n\n{headlines_for_ai}"}]}]}
-    
+    # KI-Zusammenfassung via Gemini
     summary = "Aktuelle Updates aus der Medienwelt."
-    try:
-        res = requests.post(gemini_url, json=payload, headers={'Content-Type': 'application/json'}, timeout=10)
-        summary = res.json()['candidates'][0]['content']['parts'][0]['text'].strip()
-    except: pass
+    if GEMINI_KEY and combined:
+        headlines = " \n".join([a['title'] for a in combined[:6]])
+        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        payload = {"contents": [{"parts": [{"text": f"Fasse in max. 10 Wörtern zusammen: {headlines}"}]}]}
+        try:
+            res = requests.post(gemini_url, json=payload, timeout=10)
+            summary = res.json()['candidates'][0]['content']['parts'][0]['text'].strip()
+        except: pass
 
-    ticker_data = [{"title": summary, "is_ai": True}]
+    ticker_data = [{"title": summary, "is_ai": True, "url": "#"}]
     for a in combined[:20]:
-        source = a.get('source', {}).get('name', 'News')
-        ticker_data.append({"title": a['title'], "url": a.get('url', '#'), "source": source})
+        ticker_data.append({
+            "title": a['title'], 
+            "url": a.get('url', '#'), 
+            "source": a.get('source', {}).get('name', 'News')
+        })
     
     return ticker_data, status_text
 
 ticker_entries, search_status = start_process()
 now_ts = datetime.now().timestamp() * 1000 
 
-# --- HTML GENERIERUNG (Unverändert für das Design) ---
 html_content = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -143,7 +127,7 @@ html_content = f"""
             <span class="live-dot"></span>
             <div id="header-text-container">
                 <span id="h1" class="header-msg active">Talk?Now! News</span>
-                <span id="h2" class="header-msg">Aktuelle News zu Videopodcasts, Medien und unseren Shows</span>
+                <span id="h2" class="header-msg">Aktuelle News aus Medien & Showbiz</span>
             </div>
         </div>
         <div id="progress-bar-container"><div id="progress-bar"></div></div>
@@ -161,25 +145,37 @@ html_content = f"""
         const bar = document.getElementById('progress-bar');
         const h1 = document.getElementById('h1');
         const h2 = document.getElementById('h2');
+
         setInterval(() => {{
             if(h1.classList.contains('active')) {{ h1.classList.remove('active'); h2.classList.add('active'); }}
             else {{ h2.classList.remove('active'); h1.classList.add('active'); }}
         }}, 4000);
+
         function getTimeAgo() {{
             const diff = Math.floor((Date.now() - updateTime) / 60000);
             if (diff < 1) return "Gerade eben";
             return `Vor ${{diff}} Min.`;
         }}
+
         function showNext() {{
             const entry = entries[currentIndex];
-            bar.style.animation = 'none'; bar.offsetHeight; 
-            bar.style.animation = 'progress 3.5s linear forwards';
+            bar.style.animation = 'none'; 
+            bar.offsetHeight; 
+            bar.style.animation = 'progress 4s linear forwards';
+            
             const timeLabel = getTimeAgo();
             status.innerText = entry.is_ai ? `KI-Fokus | ${{timeLabel}}` : `${{entry.source}} | ${{timeLabel}}`;
-            box.innerHTML = entry.url !== "#" ? `<a href="${{entry.url}}" target="_blank" class="news-text">${{entry.title}}</a>` : `<p class="news-text">${{entry.title}}</p>`;
+            
+            if (entry.url && entry.url !== "#") {{
+                box.innerHTML = `<a href="${{entry.url}}" target="_blank" class="news-text">${{entry.title}}</a>`;
+            }} else {{
+                box.innerHTML = `<p class="news-text">${{entry.title}}</p>`;
+            }}
+            
             currentIndex = (currentIndex + 1) % entries.length;
         }}
-        setInterval(showNext, 3500);
+
+        setInterval(showNext, 4000);
         showNext();
     </script>
 </body>
